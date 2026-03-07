@@ -57,7 +57,7 @@ This is the Acme Platform monorepo. It contains:
 
 This repo does NOT contain: ML model training code, data pipelines, or mobile applications. Those live in separate repositories.
 
-Deployment target: AWS EKS (Kubernetes 1.29) in us-east-1 and eu-west-1.
+Deployment target: AWS EKS (Kubernetes 1.32) in us-east-1 and eu-west-1.
 
 ## Agent Behavior Rules
 

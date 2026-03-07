@@ -28,7 +28,7 @@ These tools provide the runtime substrate and networking for agentic workloads. 
 
 | Tool | What it is | Why it matters for agentic workloads |
 |------|-----------|--------------------------------------|
-| **Kubernetes Gateway API** | The successor to Ingress for routing traffic in Kubernetes. GA since v1.1 (Oct 2024). | Provides fine-grained traffic routing that lets you isolate agent traffic from production workloads. Header-based routing enables A/B testing agent versions without separate clusters. |
+| **Kubernetes Gateway API** | The successor to Ingress for routing traffic in Kubernetes. GA since v1.1 (Oct 2024), current standard release v1.4.0. Kubernetes is retiring Ingress NGINX in 2026 — Gateway API is the migration target. | Provides fine-grained traffic routing that lets you isolate agent traffic from production workloads. Header-based routing enables A/B testing agent versions without separate clusters. |
 | **Dapr** | Distributed Application Runtime. CNCF graduated project. Sidecar-based building blocks for pub/sub, state management, service invocation. | Agents need durable state (conversation context, tool call history) and reliable pub/sub for event-driven triggers. Dapr provides both without vendor lock-in. The sidecar pattern means agent code doesn't need to embed these capabilities. |
 | **KEDA** | Kubernetes Event-Driven Autoscaling. CNCF graduated. Scales workloads based on event sources (queues, streams, cron). | Agents are bursty — CI failure analysis spikes after deployments, incident triage spikes during outages. KEDA scales agent pods based on queue depth rather than CPU, which matches agent usage patterns better than HPA. |
 | **Service Mesh (Istio / Linkerd)** | Sidecar-based network proxy layer providing mTLS, traffic management, and observability. | Enforces network-level isolation for agent workloads. Istio offers more features but higher operational complexity and resource overhead. Linkerd is lighter, simpler, and sufficient for most agent isolation use cases. Choose based on what your team already operates, not on agent-specific requirements. |
@@ -43,7 +43,9 @@ This layer is where the gap is widest between what exists and what teams need. M
 
 The open integration standard (originated at Anthropic, now adopted broadly) that defines how agents connect to external tools and data sources. MCP provides a standardized interface so agents can call APIs, read files, query databases, and interact with infrastructure through a common protocol rather than per-tool custom integrations.
 
-**Maturity:** The protocol specification is stable and widely adopted. The ecosystem of MCP servers (tool integrations) is growing rapidly. **Critical gap as of March 2026:** MCP has no built-in security or authentication standard. Teams must implement their own auth layer on top of MCP. The Snyk February 2026 research found 13.4% of publicly available agent skills (many distributed as MCP servers) had critical vulnerabilities, with 76 confirmed malicious payloads (source: Snyk State of AI-Assisted Development, Feb 2026). Vet any third-party MCP server the same way you'd vet a dependency — review the code, pin the version, scan it.
+**Governance:** MCP was donated to the Linux Foundation's Agentic AI Foundation (AAIF) in December 2025, co-founded by Anthropic, Block, and OpenAI. This gives the protocol vendor-neutral governance.
+
+**Maturity:** The protocol specification is stable and widely adopted. The June 2025 spec added OAuth-based authorization — MCP servers are classified as OAuth Resource Servers and clients must implement RFC 8707 Resource Indicators. The November 2025 spec (version 2025-11-25) further refined security. However, adoption of these auth features lags significantly. **Security reality as of March 2026:** The Snyk February 2026 research found 13.4% of publicly available agent skills (many distributed as MCP servers) had critical vulnerabilities, with 76 confirmed malicious payloads (source: Snyk State of AI-Assisted Development, Feb 2026). Subsequent March 2026 analysis shows 30 CVEs filed in 60 days and 38% of 500+ scanned MCP servers completely lack authentication. The spec has auth — the ecosystem hasn't caught up. Vet any third-party MCP server the same way you'd vet a dependency — review the code, pin the version, scan it.
 
 ### KAgent
 
@@ -61,7 +63,7 @@ Multi-step agent orchestration framework with durable execution and human-in-the
 
 Agent orchestration built on the Dapr runtime. Extends the CNCF-graduated Dapr project with agent-specific primitives: workflow definitions, tool registries, and multi-agent communication patterns.
 
-**Maturity:** GA. The sidecar pattern means agent state persists through pod failures without custom checkpointing. Cloud-agnostic by design — runs on any Kubernetes cluster. Best fit for teams already running Dapr or operating in multi-cloud environments.
+**Maturity:** GA. Dapr v1.17 (released February 27, 2026) adds workflow versioning for safely evolving long-running workflow code without breaking in-flight instances, 41% higher workflow throughput, and two new AI agent framework extensions: `dapr-ext-langgraph` and `dapr-ext-strands` for durable, observable AI agent workflows. The sidecar pattern means agent state persists through pod failures without custom checkpointing. Cloud-agnostic by design — runs on any Kubernetes cluster. Best fit for teams already running Dapr or operating in multi-cloud environments.
 
 ---
 
@@ -75,7 +77,7 @@ The models and platforms that power agent reasoning. This layer changes fastest.
 | **GitHub Copilot Coding Agent** | GA since September 2025. Deep integration with GitHub's permission model — inherits repository-level access controls automatically. Assigns itself to issues, opens PRs, runs CI. | Tightly coupled to GitHub's ecosystem. Limited customization of the agent's planning and tool-use behavior compared to framework-based approaches. |
 | **Google Agent Development Kit (ADK)** | Live and available for building custom agents on Google Cloud. Integrates with Vertex AI and Google's model lineup. | Strongest when paired with Google Cloud infrastructure. Cross-cloud deployments require additional integration work. |
 | **AWS Bedrock** | Managed service for running foundation models with built-in guardrails, knowledge bases, and agent orchestration. IAM-native access control. | Model selection is more limited than self-hosted options. Agent orchestration features are less flexible than framework-based approaches (LangGraph, Dapr Agents). |
-| **OpenAI Codex (GPT-5.3-Codex)** | Relaunched May 2025 as a dedicated coding agent. Sandboxed cloud execution environment with strong code generation and test-running capabilities. | Operates in its own sandbox rather than your infrastructure, which limits integration with existing CI/CD pipelines and observability stacks. |
+| **OpenAI Codex / GPT-5.4** | GPT-5.3-Codex relaunched May 2025 as a dedicated coding agent. GPT-5.4 (launched March 5, 2026) incorporates Codex coding capabilities into a general-purpose model with frontier reasoning and agentic workflows. Note: GPT-5.3-Codex and Claude Opus 4.1 were deprecated from GitHub Copilot on February 17, 2026. | GPT-5.4 combines coding, reasoning, and tool chaining. Sandboxed execution limits integration with existing CI/CD pipelines and observability stacks. GPT-5.4 leads on SWE-Bench Pro (57.7%) while Claude Opus 4.6 leads on repository-level benchmarks and ARC-AGI-2. |
 
 ---
 
@@ -85,9 +87,9 @@ This is non-negotiable infrastructure. Do not increase agent autonomy without ag
 
 | Tool | Status | What it provides |
 |------|--------|-----------------|
-| **Datadog LLM Observability** | GA since June 2025 | End-to-end tracing of LLM calls, prompt/response inspection, cost tracking per invocation. Integrates with existing Datadog APM. |
-| **New Relic AI Monitoring** | Expanded February 2026 | LLM performance monitoring, token usage tracking, error analysis. Extended in Feb 2026 to support agent workflow tracing, not just individual LLM calls. |
-| **Grafana AI Observability (Assistant)** | GA since October 2025 | Plugin-based LLM monitoring within Grafana. Natural fit for teams already running the Grafana/Prometheus/Loki stack. |
+| **Datadog LLM Observability** | GA since June 2025. AI Agent Monitoring now GA. | End-to-end tracing of LLM calls, prompt/response inspection, cost tracking per invocation. AI Agent Monitoring adds interactive agent decision-path graphs and auto-instrumentation for Anthropic, OpenAI, LangChain, and Bedrock SDKs. LLM Experiments (A/B testing for prompts) in preview. Integrates with existing Datadog APM. |
+| **New Relic AI Monitoring** | Expanded February 2026 | LLM performance monitoring, token usage tracking, error analysis. Extended in Feb 2026 to support agent workflow tracing and multi-agent system visibility, not just individual LLM calls. 30% quarter-over-quarter adoption growth. |
+| **Grafana AI Observability (Assistant)** | GA since October 2025 | Plugin-based LLM monitoring within Grafana. Now includes MCP server monitoring, VectorDB performance tracking, and 5 pre-built dashboards for AI observability. Natural fit for teams already running the Grafana/Prometheus/Loki stack. |
 | **Langfuse** | Open source, actively maintained | Self-hosted LLM observability. Trace visualization, prompt management, eval tracking. Best option for teams that need to keep observability data on-prem or want full control over the telemetry pipeline. |
 | **OpenTelemetry GenAI SIG** | Standardization in progress | Defining semantic conventions for LLM and agent telemetry. Not a tool you deploy today, but the standard your tooling will converge on. Watch this space — adopting OTel-compatible instrumentation now reduces future migration cost. |
 
