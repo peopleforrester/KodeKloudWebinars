@@ -1,8 +1,20 @@
 # AGENTS.md Template
 
-`AGENTS.md` is the per-repo configuration file that tells agents how to behave in a specific repository context. It lives in the repo root and serves as the agent's operating manual for that codebase — what the repo is, what the agent is allowed to do, what's off-limits, and how to escalate when uncertain.
+`AGENTS.md` is an open standard (originated at OpenAI in August 2025, now under the Linux Foundation's Agentic AI Foundation) that gives coding agents — Codex, Claude Code, GitHub Copilot, Cursor, Jules, Devin, and others — a consistent source of project-specific guidance. It lives in the repo root and serves as the agent's operating manual for that codebase.
 
-Think of it as the agent equivalent of a `CONTRIBUTING.md`: it sets expectations before work begins.
+**What AGENTS.md is:** Codebase context documentation. It tells coding agents what the repo is, how to build and test it, what coding conventions to follow, and where the landmines are. Think of it as the agent equivalent of a `CONTRIBUTING.md`: it sets expectations before work begins.
+
+**What AGENTS.md is not:** Permissions governance. IAM policies, RBAC manifests, and runtime agent permissions do not belong here — those live in the [permission matrix](permission-matrix-template.md). AGENTS.md is read by coding agents that interact with your source code, not by production ops agents that manage your infrastructure. Do not conflate the two.
+
+**When is AGENTS.md relevant to this webinar's audience?** If your CI build failure analysis agent also needs to understand your repo structure, coding conventions, and architecture to make better recommendations, a well-structured AGENTS.md helps the agent reason about your codebase. That's a legitimate use case. Permissions governance lives in the permission matrix, not here.
+
+**What to explicitly exclude from AGENTS.md:**
+
+- IAM policies or permission grants (wrong artifact — use [permission-matrix-template.md](permission-matrix-template.md))
+- Runtime ops agent behavior (AGENTS.md is read by coding agents, not production ops agents)
+- Sensitive environment details or credentials of any kind
+
+**Keep it under 150 lines.** Long AGENTS.md files degrade agent performance by burying signal in noise.
 
 ---
 
@@ -15,25 +27,29 @@ Think of it as the agent equivalent of a `CONTRIBUTING.md`: it sets expectations
 
 [What this repo is, what it does, what it does NOT do. Be specific enough that an agent reading this can orient itself without additional context.]
 
-## Agent Behavior Rules
+## Architecture Overview
 
-[What agents are allowed to do in this repository. Be explicit — implicit permission is how agent scope creeps.]
+[Major modules, what lives where, key boundaries between components.]
+
+## Coding Conventions and Style
+
+[Language-specific conventions, formatting rules, naming patterns. Reference linter configs where applicable.]
+
+## Build and Test Commands
+
+[Exact commands, not prose descriptions. What an agent needs to run locally.]
 
 ## Off-Limits
 
-[Explicit prohibitions. What agents must NOT do, modify, or access in this repo. When in doubt, list it here.]
+[Files or paths the agent should not modify. Be explicit — implicit permission is how scope creeps.]
 
-## CI/CD Context
+## Escalation Signals
 
-[Which pipeline runs on this repo, what triggers mean, how to interpret CI results.]
+[Patterns that mean the agent should stop and flag for human review, not guess.]
 
-## Escalation
+## Gotchas
 
-[What the agent should do when it's uncertain. When to stop, who to notify, how to flag.]
-
-## Tool Access
-
-[Which MCP servers or tools are configured for this repo, what they provide, and what they don't.]
+[Known footguns, legacy patterns, things that look wrong but are intentional.]
 ```
 
 ---
@@ -59,84 +75,86 @@ This repo does NOT contain: ML model training code, data pipelines, or mobile ap
 
 Deployment target: AWS EKS (Kubernetes 1.32) in us-east-1 and eu-west-1.
 
-## Agent Behavior Rules
+## Architecture Overview
 
-Agents operating in this repository may:
+The API service (`services/api/`) is the backend for the React frontend (`services/web/`). They share types and utility functions via `packages/shared/`. The API talks to RDS (PostgreSQL) and ElastiCache (Redis). Infrastructure is managed by Terraform in `infra/`, deployed via ArgoCD to EKS.
 
-1. Read any file in the repository to understand context, code structure, and dependencies.
-2. Analyze CI/CD failure logs from GitHub Actions and correlate them with recent commits.
-3. Recommend code changes by describing the fix in a PR comment or issue. Recommendations must include the file path, the specific change, and the rationale.
-4. Query Prometheus metrics (read-only) via the configured MCP server to correlate failures with runtime behavior.
-5. Read Terraform plan output to understand infrastructure changes. Never read or reference the state file directly.
-6. Run the test suite locally (`npm test` in `services/api/` or `services/web/`) to validate hypotheses about failure causes.
+Key boundary: `packages/shared/` is consumed by both services. Changes here affect downstream builds. Treat shared package changes as cross-cutting — they require review from both service owners.
 
-Agents operating in this repository must:
+## Coding Conventions and Style
 
-1. Cite the specific files and line numbers that informed their recommendation.
-2. Express uncertainty explicitly when a failure could have multiple root causes. "I'm not sure" is a valid and expected output.
-3. Respect the `.agentignore` file if present (same syntax as `.gitignore`).
+- TypeScript strict mode enabled in both services. No `any` types without a comment explaining why.
+- ESLint config at repo root (`.eslintrc.js`). Extends `@typescript-eslint/recommended`. Indentation: 2 spaces.
+- Prettier for formatting. Config at `.prettierrc`. Run `npx prettier --check .` before committing.
+- Named exports only — no default exports. This keeps imports grep-friendly.
+- Error handling: throw typed errors from `packages/shared/errors.ts`. Do not throw plain strings.
+- Database queries: use the query builder in `services/api/src/db/`. No raw SQL strings in controllers.
+
+## Build and Test Commands
+
+```bash
+# Install dependencies (from repo root)
+npm ci
+
+# Lint
+npx eslint src/ --ext .ts,.tsx
+
+# Type check
+npx tsc --noEmit
+
+# Unit tests (API)
+cd services/api && npm test
+
+# Unit tests (Web)
+cd services/web && npm test
+
+# Integration tests (requires test database — see scripts/setup-test-db.sh)
+cd services/api && npm run test:integration
+
+# Build API
+cd services/api && npm run build
+
+# Build Web
+cd services/web && npm run build
+```
 
 ## Off-Limits
 
-Agents must NOT:
+- **`infra/`** — Terraform changes require infrastructure review. Read and analyze, but do not modify.
+- **`scripts/`** — Operational scripts (especially database migrations) have destructive potential. Read-only.
+- **`.github/workflows/`** — Pipeline changes require platform team review.
+- **Any file containing or referencing secrets** — No `.env` files, AWS credentials, database connection strings, or API keys. If analysis requires knowledge of a secret's value, stop and escalate.
 
-1. **Modify files in `infra/`** — Terraform changes require infrastructure review. Agents may read and analyze, but all infrastructure changes go through the platform team.
-2. **Access or reference secrets** — No reading `.env` files, AWS credentials, database connection strings, or API keys. If a failure analysis requires knowledge of a secret's value, escalate to a human.
-3. **Modify `scripts/`** — Operational scripts (especially database migrations) have destructive potential. Read-only.
-4. **Push commits or open PRs directly** — Advisory mode only. The agent recommends, a human commits.
-5. **Modify CI/CD workflow files** (`.github/workflows/`) — Pipeline changes require platform team review.
-6. **Access production databases or caches** — No RDS or ElastiCache access, even read-only. Use metrics and logs for production investigation.
-7. **Interact with third-party APIs** (Stripe, SendGrid, Auth0) — These integrations have rate limits and financial implications. Agent access is not authorized.
+## Escalation Signals
 
-## CI/CD Context
-
-**Pipeline:** GitHub Actions, defined in `.github/workflows/`.
-
-**Key workflows:**
-- `ci.yml` — Runs on every PR. Lints, type-checks, runs unit and integration tests for changed services. Must pass for merge.
-- `deploy-staging.yml` — Triggers on merge to `main`. Deploys to EKS staging cluster via ArgoCD.
-- `deploy-production.yml` — Manual trigger only. Requires two approvals. Deploys to EKS production clusters in both regions.
-
-**Interpreting CI results:**
-- `lint` job failure → Check ESLint and Prettier output. Usually a formatting issue or unused import. Straightforward to diagnose.
-- `typecheck` job failure → TypeScript compilation error. Check the specific file and line in the error output. Often caused by changes in `packages/shared/` that affect downstream services.
-- `test-unit` job failure → Unit test failure. Check the test name and the module under test. Look at the most recent commit to that module.
-- `test-integration` job failure → May be a code issue or an environment issue (test database, external service mock). Check if the same test passed on the previous commit before assuming a code problem.
-- `build` job failure → Usually a dependency issue (missing or conflicting packages) or an esbuild/Vite configuration problem. Check `package-lock.json` changes.
-
-## Escalation
-
-When the agent encounters any of the following, it should stop analysis and flag for human review:
+Stop analysis and flag for human review when you encounter:
 
 1. **Ambiguous root cause** — If two or more equally plausible explanations exist, present all of them ranked by likelihood and explicitly state that human judgment is needed.
-2. **Security-adjacent failures** — Any failure involving authentication, authorization, secrets, or certificate errors. Do not attempt to diagnose; flag immediately.
+2. **Security-adjacent failures** — Any failure involving authentication, authorization, secrets, or certificate errors. Do not attempt to diagnose. Flag immediately.
 3. **Infrastructure failures** — EKS node issues, RDS connectivity, networking errors. These require platform team involvement.
-4. **Flaky tests** — If the same test has passed and failed on the same code within the last 5 runs, flag it as a flaky test rather than recommending a code fix. Link to the test history.
-5. **Failures in `packages/shared/`** — Changes here affect multiple services. Flag for cross-team review rather than recommending a fix in isolation.
+4. **Flaky tests** — If the same test has passed and failed on the same code within the last 5 runs, flag as flaky rather than recommending a code fix. Link to the test history.
+5. **Changes in `packages/shared/`** — Affects multiple services. Flag for cross-team review rather than recommending a fix in isolation.
 
-Escalation format: Post a comment on the PR or issue with the prefix `[ESCALATION]` followed by a summary of what was found, what's uncertain, and who should look at it (based on CODEOWNERS).
+## Gotchas
 
-## Tool Access
-
-**Configured MCP servers:**
-
-1. **GitHub MCP Server** — Provides: repository file access, PR and issue management (read), CI workflow status and logs. Does NOT provide: write access to repository contents, workflow dispatch, or admin operations.
-2. **Prometheus MCP Server** — Provides: PromQL query execution against the staging Prometheus instance. Does NOT provide: access to production Prometheus, write access (recording rules, alerts), or Alertmanager configuration.
-3. **Filesystem MCP Server** — Provides: read access to the local checkout of this repository. Does NOT provide: write access, or access to files outside the repository root.
-
-No other MCP servers or tools are authorized for this repository. If an agent workflow requires a tool not listed here, that's a configuration change that needs platform team review.
+- **`services/api/src/legacy/`** — This directory contains v1 API handlers that are deprecated but still serve traffic for three enterprise customers. They look like dead code. They are not. Do not recommend removing them.
+- **`packages/shared/src/dates.ts`** — Uses a custom date parsing function instead of a library. This is intentional — the custom parser handles a legacy date format from the v1 API that no standard library supports. Do not recommend replacing it with dayjs/date-fns.
+- **Test database in CI** — Integration tests use a containerized PostgreSQL instance started by `scripts/setup-test-db.sh`. Tests that fail with connection errors are usually a CI environment issue, not a code issue.
+- **`services/web/public/config.js`** — Runtime configuration injected at deploy time. The version in the repo is a template with placeholder values. Do not treat placeholder values as bugs.
 ```
 
 ---
 
 ## Writing Your Own AGENTS.md
 
-Start with this example and strip it down to your reality. A few guidelines:
+Start with the example above and strip it down to your reality. A few guidelines:
 
 **Be specific about what the repo contains.** Agents use this to scope their analysis. "A microservices repo" is not useful. "A Node.js API in `services/api/` deployed to EKS" is.
 
-**The Off-Limits section is the most important part.** Implicit permission is how scope creeps. If you haven't explicitly prohibited something, an agent (or a future engineer configuring an agent) may assume it's allowed. When in doubt, list it in Off-Limits and remove restrictions later once you have data.
+**The Gotchas section prevents the most expensive mistakes.** Every codebase has things that look wrong but are intentional. If you don't tell the agent, it will recommend "fixing" them — and a reviewer who trusts the agent may approve the change. Write down the things that trip up new team members. Those are exactly the things that will trip up agents.
 
-**Keep the CI/CD section grounded in your actual workflow names and job names.** An agent reading "the CI pipeline" can't do anything with that. An agent reading "`ci.yml` runs on every PR with jobs: lint, typecheck, test-unit, test-integration, build" can correlate a failure to the right job immediately.
+**The Off-Limits section is your blast radius control.** If you haven't explicitly prohibited something, an agent (or a future engineer configuring an agent) may assume it's allowed. When in doubt, list it in Off-Limits and remove restrictions later once you have data.
 
-**Update AGENTS.md when you update your CI/CD pipeline or infrastructure.** Stale agent configuration is as dangerous as stale RBAC policies. Add AGENTS.md review to your pipeline change checklist.
+**Keep the Build and Test Commands section copy-pasteable.** Exact commands, not descriptions. An agent reading "run the test suite" can't do anything with that. An agent reading `cd services/api && npm test` can.
+
+**Update AGENTS.md when you update your codebase structure.** Stale agent configuration leads to stale recommendations. Add AGENTS.md review to your PR checklist for structural changes.

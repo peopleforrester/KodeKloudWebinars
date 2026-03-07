@@ -48,6 +48,22 @@ Documents Elastic's implementation of AI-assisted CI failure analysis and remedi
 
 ---
 
+## Standards and Specifications
+
+**MCP Authorization Specification — modelcontextprotocol.io**
+Source: Model Context Protocol, 2025
+The actual specification for OAuth 2.1 + PKCE implementation in MCP servers. Required reading before any team builds or consumes an MCP server. Defines MCP servers as OAuth Resource Servers with mandatory Resource Indicators (RFC 8707). The spec is sound — the ecosystem implementation quality is the problem (see Snyk research above).
+
+**Linux Foundation Agentic AI Foundation (AAIF) — Announcement**
+Source: Linux Foundation, December 2025
+The governance body for MCP, AGENTS.md, and Goose, co-founded by Anthropic, OpenAI, and Block, with platinum members including AWS, Google, Microsoft, Bloomberg, and Cloudflare. This is where these standards evolve. Bookmark it so you know when specs change.
+
+**Google Agent2Agent (A2A) Protocol — a2aproject.org**
+Source: Google, April 2025 (now under Linux Foundation)
+Open protocol for agent-to-agent communication, complementing MCP (agent-to-tool). Version 0.3 (July 2025) added gRPC support and signed security cards. Relevant context for teams planning multi-agent architectures at Level 3+. Not required for the [90-day playbook](90-day-playbook/playbook.md), but senior engineers will ask about it.
+
+---
+
 ## Practitioner Perspectives
 
 **Bret Fisher — Agentic DevOps Podcast (agenticdevops.fm)**

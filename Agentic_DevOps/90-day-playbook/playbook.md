@@ -40,9 +40,11 @@ Create a separate service principal for the agent. Not your personal credentials
 
 For the CI build failure analysis use case, the agent needs read access to: the source code repository, CI pipeline logs and status, container registry manifests (to check image existence), and your metrics/logging store (Prometheus, Loki, or equivalent). It should have zero write access during the foundation phase. The [permission matrix template](../agent-boundary-design/permission-matrix-template.md) provides the format for documenting this — including a completed example for exactly this use case.
 
-Commit the completed permission matrix to your repository. Then create an `AGENTS.md` file in the repo root that tells the agent what it can do, what's off-limits, and how to escalate when uncertain. The [AGENTS.md template](../agent-boundary-design/agents-md-template.md) provides a starter with a filled-out example for a monorepo environment.
+Commit the completed permission matrix to your repository. Your IAM policy, RBAC manifests, and permission matrix are the governance artifacts — these are what your security team reviews and what defines the agent's blast radius.
 
-Have your security team review both documents. This review is a conversation, not a gate — you want their input on the permission model before the agent goes live, not a sign-off after the fact.
+A note on AGENTS.md: `AGENTS.md` is an open standard (OpenAI, August 2025, now under the Linux Foundation's AAIF) that gives coding agents repo-specific instructions. It is codebase context documentation — repo structure, coding conventions, build commands, known gotchas — not permissions governance. Do not use AGENTS.md for ops agent permission documentation. If your CI build failure analysis agent also needs to understand your repo structure and codebase to make better recommendations, then a well-structured AGENTS.md is appropriate and the [AGENTS.md template](../agent-boundary-design/agents-md-template.md) provides a starter. But permissions governance lives in the permission matrix, not in AGENTS.md.
+
+Have your security team review the permission matrix. This review is a conversation, not a gate — you want their input on the permission model before the agent goes live, not a sign-off after the fact.
 
 ### Form Your Agentic AI Pod
 
@@ -52,7 +54,7 @@ Assign three explicit responsibilities:
 
 - **Eval suite owner:** Maintains the eval suite, runs it before deployments and on schedule, tracks scores over time, adds new scenarios as new failure patterns appear.
 - **Observability owner:** Sets up and maintains the agent observability dashboard (token cost, recommendation accuracy, override frequency, tool call patterns). See the [observability tooling reference](../stack-reference/tool-landscape.md) for options.
-- **Governance owner:** Maintains the permission matrix and AGENTS.md, coordinates with the security team, owns the Day 60 decision gate review.
+- **Governance owner:** Maintains the permission matrix (and AGENTS.md if applicable), coordinates with the security team, owns the Day 60 decision gate review.
 
 One person can hold two roles if you only have two engineers. No one should hold all three — that's a single point of failure for the entire pilot.
 
@@ -140,7 +142,7 @@ A concrete inventory of what exists at the end of this playbook:
 - **One agentic workflow in production:** CI build failure analysis, advisory mode, with human approval gates on every recommendation.
 - **An eval suite** covering your top 10 failure scenarios with pass/fail tracking and a weekly production sampling cadence.
 - **Agent observability dashboards** showing token cost per invocation, recommendation accuracy over time, human override frequency, and tool call success/failure rates.
-- **IAM documentation** for agent permissions — a completed permission matrix and AGENTS.md committed to the repository and reviewed by your security team.
+- **IAM documentation** for agent permissions — a completed permission matrix committed to the repository and reviewed by your security team. If applicable, an AGENTS.md providing codebase context for the coding agent.
 - **One incident triage workflow** running in advisory mode with its own eval suite and permission matrix.
 - **The data set** to make the case for expanding agent scope — 60+ days of recommendation accuracy data, cost tracking, and governance compliance.
 
