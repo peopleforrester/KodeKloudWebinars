@@ -28,7 +28,7 @@ All of these must be in place. These are the guardrails that make expanding agen
 
 - [ ] **IAM policy for agent service principal documented and reviewed.** The dedicated service account used by the agent has a documented permission set. A human has reviewed it against the principle of least privilege. It's committed to the repository alongside the permission matrix.
 
-- [ ] **AGENTS.md committed to the repo and reviewed by security.** The AGENTS.md file defining agent behavior, off-limits areas, and escalation rules is committed to the repo root. Someone from the security team (or a security-minded engineer) has reviewed it and confirmed the off-limits section is appropriate.
+- [ ] **Permission matrix committed and reviewed by security.** The [permission matrix](../agent-boundary-design/permission-matrix-template.md) defining agent IAM scope is committed to the repository and reviewed by the security team. If an AGENTS.md file is also in use (for coding agent codebase context), it should be committed and reviewed as well — but the permission matrix is the governance artifact.
 
 - [ ] **Eval suite passing on all 10 baseline scenarios.** The eval suite built during Days 1–30 has been run against the current agent configuration and passes with a score of 8/10 or higher. Bring the most recent eval results to the meeting.
 
@@ -50,7 +50,7 @@ Identify which data requirement is missing and assign an owner to close the gap.
 
 **Decision: Proceed to Days 61–90.**
 
-Begin planning the second use case (AI-assisted incident triage). Carry forward all governance requirements — the incident triage agent gets its own permission matrix, its own eval suite, and its own section in AGENTS.md.
+Begin planning the second use case (AI-assisted incident triage). Carry forward all governance requirements — the incident triage agent gets its own permission matrix and its own eval suite.
 
 ### If all data requirements are met but recommendation accuracy is <70%:
 
