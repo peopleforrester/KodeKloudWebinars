@@ -58,13 +58,4 @@ Practitioner-focused podcast covering agentic AI in DevOps contexts. Note: this 
 
 ## KodeKloud Learning Paths
 
-<!-- TODO: Add specific course URLs when finalized — do not hardcode URLs that may change -->
-
-KodeKloud offers courses on several technologies referenced in this collateral:
-
-- **KAgent** — Deploying and managing AI agents on Kubernetes
-- **Kubernetes** — Foundation skills for the platform layer
-- **Terraform** — Infrastructure as Code for agent deployment infrastructure
-- **Prometheus and Grafana** — Observability stack for agent monitoring
-
-Check the KodeKloud platform for current course listings and learning paths.
+KodeKloud offers courses on several technologies referenced in this collateral, including KAgent, Kubernetes, Terraform, Prometheus, and Grafana. Browse the [KodeKloud course catalog](https://kodekloud.com/courses/) for current listings and learning paths.
