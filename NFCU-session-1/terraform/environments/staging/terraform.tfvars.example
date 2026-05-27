@@ -1,0 +1,23 @@
+# ABOUTME: Example staging tfvars. Copy to terraform.tfvars and fill in. Never commit a real
+# ABOUTME: terraform.tfvars (the repo .gitignore blocks *.tfvars except *.example).
+
+# Immutable model version. The deploy workflow injects this; setting it to a mutable
+# identifier such as "latest" is the deliberate Lab 1 failure path (validate.py exit 2).
+model_version = "1.0.0"
+
+# Digest-referenced inference image. A tag reference is rejected at plan time.
+container_image_uri = "<account>.dkr.ecr.us-east-1.amazonaws.com/nfcu-session-1@sha256:<64 hex chars>"
+
+# S3 URI of the model artifact for this version.
+model_data_url = "s3://<artifact-bucket>/models/model-v1.0.0.tar.gz"
+
+# SageMaker execution role ARN (output of lab-platform-iac).
+execution_role_arn = "arn:aws:iam::<account-id>:role/nfcu-session-1-sagemaker-execution"
+
+# KMS key ARN (output of lab-platform-iac).
+kms_key_arn = "arn:aws:kms:us-east-1:<account-id>:key/<key-id>"
+
+# Optional overrides.
+# aws_region    = "us-east-1"
+# name          = "nfcu-session-1-staging"
+# instance_type = "ml.t3.medium"

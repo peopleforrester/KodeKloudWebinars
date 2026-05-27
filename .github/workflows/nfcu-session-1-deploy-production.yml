@@ -1,0 +1,145 @@
+# ABOUTME: Production deploy pipeline for NFCU Session 1 — manual dispatch with a change
+# ABOUTME: ticket, environment reviewer gate, signature verify, apply, and audit-trail write.
+---
+name: NFCU Session 1 - Deploy Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      change_ticket_reference:
+        description: 'Change ticket (LAB-### / CHG-### / TICKET-### / DEMO-###)'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  IMAGE_REPO: nfcu-session-1
+  MODEL_VERSION: "1.0.0"
+  TF_ENV_DIR: NFCU-session-1/terraform/environments/production
+
+jobs:
+  check-ticket:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate change ticket reference
+        # Fail fast unless the ticket matches the approved format.
+        run: |
+          ref="${{ github.event.inputs.change_ticket_reference }}"
+          if ! printf '%s' "${ref}" | grep -qE '^(LAB|CHG|TICKET|DEMO)-[0-9]+$'; then
+            echo "FATAL: change_ticket_reference '${ref}' does not match ^(LAB|CHG|TICKET|DEMO)-[0-9]+$" >&2
+            exit 1
+          fi
+          echo "Change ticket ${ref} accepted"
+
+  validate:
+    needs: check-ticket
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Python dependencies
+        run: pip install -r NFCU-session-1/requirements.txt
+      - name: Validate model artifact
+        run: |
+          python NFCU-session-1/pipeline/validate.py \
+            --artifact "${ARTIFACT_URI}" \
+            --model-version "${MODEL_VERSION}"
+        env:
+          ARTIFACT_URI: ${{ vars.ARTIFACT_URI }}
+
+  verify-container:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac  # v3
+      - name: Verify image signature
+        working-directory: NFCU-session-1/pipeline
+        run: bash verify-container.sh
+        env:
+          ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+          IMAGE_REPO: ${{ env.IMAGE_REPO }}
+          KMS_KEY_ID: ${{ vars.KMS_KEY_ID }}
+          IMAGE_DIGEST: ${{ vars.IMAGE_DIGEST }}
+
+  deploy-production:
+    needs: verify-container
+    runs-on: ubuntu-latest
+    # Bound to the protected environment: at least one required reviewer must approve
+    # at the gate before this job runs.
+    environment: nfcu-session-1-production
+    steps:
+      - uses: actions/checkout@v4
+      # Separation of duties: the person who triggers the production deploy should not
+      # be the author of the change being deployed. This step queries the most recent
+      # merge commit's author and compares it to the actor running the deploy.
+      #
+      # During the live demo Michael typically triggers his own production deploy from
+      # his own sandbox, so this check is informational there — he verbally acknowledges
+      # that in a real regulated environment it would BLOCK the deploy. LAB_GUIDE explains
+      # how to exercise the blocking path at home using two GitHub accounts.
+      - name: Enforce approver is not the change author
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          author=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}" \
+            --jq '.author.login // .commit.author.name')
+          actor="${{ github.actor }}"
+          echo "Change author: ${author} | Deploy actor: ${actor}"
+          if [ "${author}" = "${actor}" ]; then
+            echo "::warning::Approver (${actor}) is the change author. In a regulated"\
+              "environment this would block the deploy (separation of duties)."
+            # Single-user demo: warn and continue. Set ENFORCE_SOD=true to make it fatal.
+            if [ "${ENFORCE_SOD:-false}" = "true" ]; then
+              echo "FATAL: separation-of-duties violation" >&2
+              exit 1
+            fi
+          fi
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd  # v3
+      - name: Terraform apply (production)
+        id: apply
+        working-directory: ${{ env.TF_ENV_DIR }}
+        run: |
+          terraform init -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
+          terraform apply -auto-approve \
+            -var="model_version=${MODEL_VERSION}" \
+            -var="container_image_uri=${{ vars.ECR_REGISTRY }}/${IMAGE_REPO}@${{ vars.IMAGE_DIGEST }}" \
+            -var="model_data_url=${{ vars.MODEL_DATA_URL }}" \
+            -var="execution_role_arn=${{ vars.SAGEMAKER_EXECUTION_ROLE_ARN }}" \
+            -var="kms_key_arn=${{ vars.KMS_KEY_ARN }}"
+          echo "endpoint_arn=$(terraform output -raw endpoint_arn)" >> "${GITHUB_OUTPUT}"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Python dependencies
+        run: pip install -r NFCU-session-1/requirements.txt
+      - name: Write audit trail
+        # Final step: the deploy is not successful unless this audit event is written.
+        run: python NFCU-session-1/pipeline/audit-trail.py
+        env:
+          AUDIT_BUCKET: ${{ vars.AUDIT_BUCKET }}
+          MODEL_VERSION: ${{ env.MODEL_VERSION }}
+          CONTAINER_DIGEST: ${{ vars.IMAGE_DIGEST }}
+          ARTIFACT_S3_URI: ${{ vars.MODEL_DATA_URL }}
+          TRAINING_RUN_ID: ${{ vars.TRAINING_RUN_ID }}
+          TRAINING_DATASET: ${{ vars.TRAINING_DATASET }}
+          ENDPOINT_ARN: ${{ steps.apply.outputs.endpoint_arn }}
+          APPROVER_IDENTITY: ${{ github.actor }}
+          CHANGE_TICKET_REFERENCE: ${{ github.event.inputs.change_ticket_reference }}
