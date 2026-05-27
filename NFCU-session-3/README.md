@@ -10,6 +10,8 @@ The lab runs against a SageMaker endpoint (a UCI Adult income classifier carried
 from Sessions 1/2) in a per-attendee AWS sandbox, and layers on drift detection,
 drift reporting, performance estimation, and simulated incidents with runbooks.
 
+See [ENVIRONMENTS.md](ENVIRONMENTS.md) for the per-attendee monitoring-sandbox model and what each sandbox provisions.
+
 > **Self-contained:** everything needed to build, test, and validate this lab
 > lives in **this directory**. Every command below is run from inside
 > `NFCU-session-3/`. Nothing depends on the repository root or on the other

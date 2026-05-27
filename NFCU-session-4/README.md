@@ -8,6 +8,8 @@ Sessions 1–3 deploy the same workload on SageMaker. Session 4 moves it to Kube
 serving: an `InferenceService` you can scale to zero, a small LLM on CPU, per-model cost
 attribution, and a canary rollout with rollback.
 
+See [ENVIRONMENTS.md](ENVIRONMENTS.md) for the local-kind vs EKS environments and the in-cluster canary rollout.
+
 This directory is meant to be re-run the week after you watch the session — not filed away.
 Everything here runs on a local `kind` cluster with **no AWS spend**, or on your own EKS
 cluster via the included Terraform.

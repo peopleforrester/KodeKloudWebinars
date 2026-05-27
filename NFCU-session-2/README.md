@@ -9,6 +9,9 @@ regulated financial services.
 > and the repo-wide tooling (`pyproject.toml`, `Makefile`, `scripts/`) all live
 > here. Run every command below from this directory.
 
+> **Environments & promotion:** see [ENVIRONMENTS.md](ENVIRONMENTS.md) for the
+> champion ↔ challenger shadow-deployment model and the promotion/rollback gates.
+
 ## Quick start
 
 ```bash
