@@ -1,0 +1,5 @@
+# The OpenSpec tree follows OpenSpec's EARS format (GIVEN/WHEN/THEN lists sit directly
+# under #### Scenario headings) and the spec proposal is preserved verbatim — neither
+# follows ordinary markdown spacing rules. Lint the human-facing docs strictly instead.
+openspec/
+OPENSPEC_CHANGE_session-4-kserve-serving.md
