@@ -123,6 +123,7 @@ resource "aws_apigatewayv2_integration" "this" {
 }
 
 resource "aws_apigatewayv2_route" "predict" {
+  #checkov:skip=CKV_AWS_309:Route auth omitted; the public predict endpoint is a lab simplification (no WAF/authorizer/client cert).
   api_id    = aws_apigatewayv2_api.this.id
   route_key = "POST /predict"
   target    = "integrations/${aws_apigatewayv2_integration.this.id}"

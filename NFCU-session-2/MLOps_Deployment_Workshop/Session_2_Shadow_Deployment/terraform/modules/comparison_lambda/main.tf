@@ -134,9 +134,9 @@ resource "aws_lambda_function" "this" {
 
   environment {
     variables = {
-      SHADOW_LOG_BUCKET        = var.shadow_logs_bucket
+      SHADOW_LOG_BUCKET         = var.shadow_logs_bucket
       COMPARISON_RESULTS_BUCKET = var.comparison_results_bucket
-      PROMOTION_CRITERIA_PATH  = var.promotion_criteria_path
+      PROMOTION_CRITERIA_PATH   = var.promotion_criteria_path
     }
   }
 }

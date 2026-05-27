@@ -22,7 +22,21 @@ echo "==> Terraform scanners"
 tflint --chdir=terraform
 tfsec terraform/
 checkov -d terraform/ --quiet --compact
-kics scan -p terraform/ --fail-on high,critical --report-formats json -o /tmp/kics-s2 >/dev/null
+# kics ships its query/library assets next to the binary; the CLI defaults to a
+# relative ./assets path, so resolve the installed assets explicitly. Only
+# HIGH/CRITICAL findings fail the build; lower severities are documented
+# lab simplifications.
+kics_base="$(dirname "$(readlink -f "$(command -v kics)")")/.."
+kics_assets=""
+for cand in "$kics_base/share/kics/assets" "$(brew --prefix kics 2>/dev/null)/share/kics/assets"; do
+  if [[ -d "$cand/queries" ]]; then
+    kics_assets="$cand"
+    break
+  fi
+done
+kics scan -p terraform/ -e '**/.terraform/**' --fail-on high,critical \
+  ${kics_assets:+-q "$kics_assets/queries" -b "$kics_assets/libraries"} \
+  --report-formats json -o /tmp/kics-s2 >/dev/null
 
 echo "==> Python lint / format"
 ruff check lambdas/ models/ tests/
@@ -34,7 +48,9 @@ echo "==> Python types"
 for handler_dir in lambdas/*/; do
   (cd "$handler_dir" && mypy --strict ./*.py)
 done
-mypy --strict models/
+# Models import sibling modules (_dataset/_train); run from the repo root so the
+# mypy_path and library-stub overrides in pyproject.toml apply.
+(cd "$repo_root" && mypy --strict MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/models)
 
 echo "==> Tests"
 pytest tests/

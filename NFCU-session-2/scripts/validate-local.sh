@@ -22,7 +22,11 @@ shopt -u nullglob
 echo "==> Cross-cutting checks (excluding Agentic_DevOps/)"
 ruff check . --extend-exclude Agentic_DevOps
 ruff format --check . --extend-exclude Agentic_DevOps
-mypy --strict MLOps_Deployment_Workshop/*/lambdas/
+# Each lambda handler.py is type-checked from its own directory: the hyphenated
+# lambda dirs share the basename handler.py and cannot be checked in one process.
+for handler_dir in MLOps_Deployment_Workshop/*/lambdas/*/; do
+  (cd "$handler_dir" && mypy --strict ./*.py)
+done
 pytest --cov=MLOps_Deployment_Workshop
 
 echo "==> validate-local.sh: all checks passed"
