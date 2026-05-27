@@ -85,15 +85,15 @@ Checkboxes are updated live as the run progresses. See `../../../RUN_CONFIG.md` 
 
 ## 8. Load test harness (nfcu-session-4-load-test-harness)
 
-- [ ] 8.1 `tests/README.md`
-- [ ] 8.2 `tests/smoke/sample-payload-xgboost.json`
-- [ ] 8.3 `tests/smoke/sample-payload-llm.json`
-- [ ] 8.4 `tests/smoke/curl-tests.sh`
-- [ ] 8.5 `tests/load/k6-xgboost-kserve.js`
-- [ ] 8.6 `tests/load/k6-xgboost-hpa.js`
-- [ ] 8.7 `tests/load/k6-tinyllama.js`
-- [ ] 8.8 `tests/load/k6-canary-traffic.js`
-- [ ] 8.9 `tests/load/compare-scaling.sh`
+- [x] 8.1 `tests/README.md`
+- [x] 8.2 `tests/smoke/sample-payload-xgboost.json`
+- [x] 8.3 `tests/smoke/sample-payload-llm.json`
+- [x] 8.4 `tests/smoke/curl-tests.sh`
+- [x] 8.5 `tests/load/k6-xgboost-kserve.js`
+- [x] 8.6 `tests/load/k6-xgboost-hpa.js`
+- [x] 8.7 `tests/load/k6-tinyllama.js`
+- [x] 8.8 `tests/load/k6-canary-traffic.js`
+- [x] 8.9 `tests/load/compare-scaling.sh`
 
 ## 9. Attendee collateral (nfcu-session-4-collateral)
 

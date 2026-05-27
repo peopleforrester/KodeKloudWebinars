@@ -112,6 +112,19 @@ else
   skip python3
 fi
 
+# --- k6 / JavaScript syntax -------------------------------------------------
+section "javascript syntax (node --check)"
+if have node; then
+  found=0
+  while IFS= read -r f; do
+    found=1
+    if node --check "$f"; then :; else fail "node --check $f"; fi
+  done < <(find . -type f -name '*.js' -not -path '*/.terraform/*' -not -path '*/.git/*' -not -path '*/node_modules/*')
+  [[ "$found" == "1" ]] && echo "   ok" || echo "   (no js files)"
+else
+  skip "node (k6 scripts not parse-checked)"
+fi
+
 # --- Tools we cannot run here ----------------------------------------------
 section "advisory (not run here)"
 have hadolint || skip "hadolint (Dockerfile lint)"
