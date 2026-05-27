@@ -15,7 +15,10 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: [types-PyYAML, "boto3-stubs[essential]"]
-        files: '^MLOps_Deployment_Workshop/.*/(lambdas|models|tests)/.*\.py$'
+        # Scoped to models/: hyphenated lambda dirs with duplicate handler.py
+        # basenames cannot be checked in one mypy process. Handlers are
+        # type-checked per-file by scripts/validate-local.sh.
+        files: '^MLOps_Deployment_Workshop/.*/models/.*\.py$'
 
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.99.0

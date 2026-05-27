@@ -38,13 +38,13 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = [
-    "MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/lambdas",
-    "MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/models",
-    "MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/tests",
-]
-# Lambda handlers live in hyphenated directories that are not importable as
-# packages; mypy analyzes them as standalone modules.
+# Lambda handlers live in hyphenated directories and all share the basename
+# handler.py, so a single mypy process cannot check them together (duplicate
+# module name). The validate scripts type-check each handler.py individually;
+# the bulk-`files` target below covers the models package, whose modules have
+# valid, unique names.
+mypy_path = ["MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/models"]
+files = ["MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/models"]
 explicit_package_bases = true
 namespace_packages = true
 

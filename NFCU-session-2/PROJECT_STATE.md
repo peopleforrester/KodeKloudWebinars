@@ -30,7 +30,7 @@ are preserved verbatim (`MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/`
 - [x] 1. Repo-wide bootstrap (.gitignore, pyproject, Makefile, pre-commit, validate-local.sh, README, CLAUDE)
 - [x] 2. MLOps_Deployment_Workshop scaffolding (README + placeholder sessions)
 - [x] 3. Shared audit_trail Terraform module — tfsec/checkov/tflint/fmt GREEN
-- [ ] 4. Session 2 model training (champion, challenger, package, verify_agreement)
+- [x] 4. Session 2 model training — agreement 0.9284 (in 90-94% band); challenger retuned per spec validation clause
 - [ ] 5. Lambda: shadow-mirror + tests
 - [ ] 6. Lambda: comparison + tests
 - [ ] 7. Lambda: traffic-generator + tests
@@ -43,10 +43,10 @@ are preserved verbatim (`MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/`
 - [ ] 14. Acceptance verification — PARTIAL (agreement rate local; rest DEFERRED)
 
 ## Last completed step
-Section 0 (ingest + strict validate). Toolchain installed.
+Section 4 (models). Challenger hyperparameters adjusted (8/150 -> 16/80/mf=0.3) to hit the 90-94% band; documented in models/README.md. FLAG for Michael.
 
 ## Next step
-Section 1 — repo-wide bootstrap files.
+Section 10 (promotion-criteria.yaml), then Sections 5-7 (Lambdas + tests).
 
 ## Containment / deviation notes
 - `Agentic_DevOps/` does not exist under NFCU-session-2; isolation tasks are
