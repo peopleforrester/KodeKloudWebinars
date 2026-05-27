@@ -26,7 +26,14 @@ The build does **not** create anything at the real `KodeKloudWebinars/` root and
 - **Task 1.3 (root README link):** skipped — scope constraint. The capability spec
   `nfcu-session-4-collateral` requirement "Root README links Session 4" is therefore
   recorded as *deferred to the maintainer* in the archived spec, not satisfied by this run.
-- **Task 12.1 (root workflow):** rebased to a folder-local workflow / Makefile target.
+- **Task 12.1 (root workflow):** shipped as a copy-ready template at
+  `ci/nfcu-session-4-validate.yml` (GitHub only runs workflows from the repo root, which is
+  out of scope). The Makefile `validate` target is the portable entry point and passes.
+- **Task 13 (archive):** DEFERRED. §6 acceptance gates archival on live-cluster runs (kind
+  end-to-end, rehearsal <30 min, kubectl dry-run against the KServe CRDs) that cannot run in
+  the authoring environment. Archive after the 2026-06-13 dry run passes (DoD Gate 3): move
+  `openspec/changes/add-nfcu-session-4-kserve-collateral/specs/*` into `openspec/specs/`,
+  then delete the change directory.
 
 ## Tooling available in this environment
 

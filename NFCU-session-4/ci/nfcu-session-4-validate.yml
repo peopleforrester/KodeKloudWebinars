@@ -1,0 +1,50 @@
+# ABOUTME: Ready-to-install GitHub Actions workflow that runs the Session 4 validation.
+# ABOUTME: TEMPLATE — copy to the repo root at .github/workflows/ to activate (see ci/README.md).
+#
+# Not placed at .github/workflows/ directly because this build is scoped to NFCU-session-4/
+# and must not modify the repo root. GitHub only runs workflows from the root .github/
+# directory, so a maintainer copies this there to enable CI.
+name: nfcu-session-4-validate
+
+on:
+  push:
+    paths:
+      - "NFCU-session-4/**"
+  pull_request:
+    paths:
+      - "NFCU-session-4/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: NFCU-session-4
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+
+      - name: Install linters
+        run: |
+          pip install yamllint
+          npm install -g markdownlint-cli
+
+      - name: Install kubectl (for kustomize build)
+        uses: azure/setup-kubectl@v4
+
+      - name: Install PyYAML (manifest structural check)
+        run: pip install pyyaml
+
+      - name: Run validation
+        run: make validate

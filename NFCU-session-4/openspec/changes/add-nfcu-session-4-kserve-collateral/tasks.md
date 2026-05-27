@@ -127,10 +127,12 @@ Checkboxes are updated live as the run progresses. See `../../../RUN_CONFIG.md` 
 
 ## 12. CI
 
-- [ ] 12.1 Folder-local workflow / Makefile `validate` (root `.github/` not created — see RUN_CONFIG)
-- [ ] 12.2 Makefile `validate` target runs the checks locally
+- [x] 12.1 CI workflow template shipped at `ci/nfcu-session-4-validate.yml` + Makefile `validate` (root `.github/` not created — see RUN_CONFIG)
+- [x] 12.2 Makefile `validate` target runs the checks locally (passes)
 
 ## 13. Archive
 
-- [ ] 13.1 Move `specs/*` to `openspec/specs/*`
-- [ ] 13.2 Delete the change directory after archival
+- [~] 13.1 Move `specs/*` to `openspec/specs/*` — **DEFERRED**: §6 acceptance gates archival on
+  live-cluster runs (kind end-to-end, rehearsal <30 min, kubectl dry-run vs CRDs) that can't run
+  in the authoring environment. Archive after the 2026-06-13 dry run passes (DoD Gate 3).
+- [~] 13.2 Delete the change directory after archival — **DEFERRED** with 13.1.

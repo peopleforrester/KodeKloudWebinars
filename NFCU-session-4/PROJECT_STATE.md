@@ -41,20 +41,23 @@ Recovery tags (in the shared repo's object store): `nfcu-s4-phase0-scaffold`, `n
 - [x] Phase 9 — Attendee collateral (attendee-guide, reference-card)
 - [x] Phase 10 — Operations runbook (runbook/)
 - [x] Phase 11 — Rehearsal path (rehearsal/)
-- [ ] Phase 12 — CI/Makefile validate, final sweep, archive specs → openspec/specs
+- [x] Phase 12 — CI template (`ci/`) + `make validate` (passes). ARCHIVE (task 13) DEFERRED.
 
 ## Last completed step
 
-Phase 6 complete (and Phase 5). Lab manifests (lab1 XGBoost ISVC, lab2 HPA baseline,
-lab3 TinyLlama ISVC, lab4 canary/promote/rollback), GPU vLLM reference (.disabled),
-deterministic generate-xgboost-models.py, upload-to-s3.sh, READMEs. Added
-scripts/check-manifests.py (offline structural validation) to the harness. validate clean.
+ALL AUTHORING PHASES (0–12) COMPLETE. `make -C NFCU-session-4 validate` passes end-to-end
+(yamllint, markdownlint, terraform fmt+validate, kustomize build, manifest structure,
+bash -n, py_compile, node --check). 11 commits on `nfcu-session-4-build` in the worktree.
 
 ## Next step
 
-Phase 7 — `predictors/tinyllama/`: Dockerfile (multi-arch CPU, Py3.12), pyproject.toml
-(pinned deps), server.py (KServe Model subclass, prompt→completion), health.py, distilgpt2
-fallback Dockerfile, build.sh, push-to-ecr.sh, test-local.sh, .dockerignore, README.
+NONE in the authoring environment. Remaining work is **live-cluster** and belongs to the
+2026-06-13 dry run (DoD Gate 3): bring up kind/EKS, run labs 1–4 + rehearsal, kubectl
+dry-run against the KServe CRDs, build/push the predictor image, record cold-start times.
+After that dry run passes, archive the OpenSpec change (task 13: move
+`openspec/changes/.../specs/*` → `openspec/specs/`, delete the change dir).
+Also pending maintainer decision: root `README.md` Session 4 link and root `.github/`
+CI install (both intentionally out of scope — see RUN_CONFIG).
 
 ## Notes / decisions
 
