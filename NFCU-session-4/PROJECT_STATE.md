@@ -22,7 +22,7 @@ Do not touch the repo root (see `RUN_CONFIG.md` for the path mapping and deviati
 
 - [x] Phase 0 — Ingest: spec saved verbatim, RUN_CONFIG, nested openspec scaffolding (project.md, proposal/tasks/design, 9 spec deltas), PROJECT_STATE
 - [ ] Phase 1 — Repo scaffolding: README, .gitignore, Makefile (root README edit deferred)
-- [ ] Phase 2 — EKS Terraform module (cluster/eks)
+- [x] Phase 2 — EKS Terraform module (cluster/eks) — terraform validate passes against real modules
 - [ ] Phase 3 — Cluster add-ons bootstrap (cluster/addons)
 - [ ] Phase 4 — Local kind cluster (cluster/local)
 - [ ] Phase 5 — Lab overlays (cluster/lab-overlays)
@@ -36,11 +36,14 @@ Do not touch the repo root (see `RUN_CONFIG.md` for the path mapping and deviati
 
 ## Last completed step
 
-Phase 0 complete. openspec tree scaffolded under `NFCU-session-4/openspec/`.
+Phase 2 complete. EKS Terraform module written and `terraform validate`'d against the
+real terraform-aws-modules (EKS v20, IAM v5, VPC v5). Cross-platform provider lock committed.
 
 ## Next step
 
-Phase 1 — write `NFCU-session-4/README.md`, `.gitignore`, `Makefile`.
+Phase 3 — `cluster/addons/`: bootstrap.sh (ordered, idempotent), verify.sh, and
+version-pinned helm-values/*.yaml for cert-manager, Knative, Kourier, KServe,
+kube-prometheus-stack, OpenCost, and (EKS-only) the AWS Load Balancer Controller.
 
 ## Notes / decisions
 

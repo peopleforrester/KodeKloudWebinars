@@ -17,8 +17,10 @@ kubeconfig
 terraform.tfstate
 terraform.tfstate.*
 .terraform/
-.terraform.lock.hcl
 *.tfvars
+# NOTE: .terraform.lock.hcl is intentionally committed (reproducible provider
+# versions). It carries hashes for linux/darwin on amd64/arm64 so it works on
+# attendee laptops; regenerate with `terraform providers lock -platform=...`.
 
 # ...but keep the annotated examples
 !*.tfvars.example
