@@ -39,7 +39,7 @@ Recovery tags (in the shared repo's object store): `nfcu-s4-phase0-scaffold`, `n
 - [x] Phase 7 — TinyLlama predictor image (predictors/tinyllama)
 - [x] Phase 8 — Load test harness (tests/)
 - [x] Phase 9 — Attendee collateral (attendee-guide, reference-card)
-- [ ] Phase 10 — Operations runbook (runbook/)
+- [x] Phase 10 — Operations runbook (runbook/)
 - [ ] Phase 11 — Rehearsal path (rehearsal/)
 - [ ] Phase 12 — CI/Makefile validate, final sweep, archive specs → openspec/specs
 

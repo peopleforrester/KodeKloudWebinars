@@ -110,13 +110,13 @@ Checkboxes are updated live as the run progresses. See `../../../RUN_CONFIG.md` 
 
 ## 10. Operations runbook (nfcu-session-4-operations-runbook)
 
-- [ ] 10.1 `runbook/README.md`
-- [ ] 10.2 `runbook/definition-of-done.md`
-- [ ] 10.3 `runbook/troubleshooting-matrix.md`
-- [ ] 10.4 `runbook/day-of-operations.md`
-- [ ] 10.5 `runbook/cleanup-automation.md`
-- [ ] 10.6 `runbook/dry-run-checklist.md`
-- [ ] 10.7 `runbook/speaker-aws-spend.md`
+- [x] 10.1 `runbook/README.md`
+- [x] 10.2 `runbook/definition-of-done.md`
+- [x] 10.3 `runbook/troubleshooting-matrix.md`
+- [x] 10.4 `runbook/day-of-operations.md`
+- [x] 10.5 `runbook/cleanup-automation.md`
+- [x] 10.6 `runbook/dry-run-checklist.md`
+- [x] 10.7 `runbook/speaker-aws-spend.md`
 
 ## 11. Speaker rehearsal path
 
