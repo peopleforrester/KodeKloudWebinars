@@ -120,10 +120,10 @@ Checkboxes are updated live as the run progresses. See `../../../RUN_CONFIG.md` 
 
 ## 11. Speaker rehearsal path
 
-- [ ] 11.1 `rehearsal/README.md`
-- [ ] 11.2 `rehearsal/run-full-session-local.sh`
-- [ ] 11.3 `rehearsal/run-full-session-eks.sh`
-- [ ] 11.4 `rehearsal/timing-notes.md`
+- [x] 11.1 `rehearsal/README.md`
+- [x] 11.2 `rehearsal/run-full-session-local.sh`
+- [x] 11.3 `rehearsal/run-full-session-eks.sh`
+- [x] 11.4 `rehearsal/timing-notes.md`
 
 ## 12. CI
 
