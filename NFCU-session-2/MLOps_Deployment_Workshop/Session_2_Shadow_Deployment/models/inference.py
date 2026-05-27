@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from typing import Any
 
 import joblib
@@ -62,10 +63,16 @@ def predict_fn(input_data: pd.DataFrame, model: Any) -> list[dict[str, Any]]:
     Returns:
         One result dict per input row.
     """
+    start = time.perf_counter()
     labels = model.predict(input_data)
     probabilities = model.predict_proba(input_data)[:, 1]
+    latency_ms = (time.perf_counter() - start) * 1000.0 / max(len(input_data), 1)
     return [
-        {"prediction": int(label), "probability": float(prob)}
+        {
+            "prediction": int(label),
+            "probability": float(prob),
+            "latency_ms": round(latency_ms, 3),
+        }
         for label, prob in zip(labels, probabilities, strict=True)
     ]
 

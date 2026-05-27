@@ -1,0 +1,24 @@
+# Promotion criteria for the Session 2 champion-challenger shadow deployment.
+# Read by the comparison Lambda (evaluation) and the session-2-promote-challenger
+# workflow (gate). Thresholds are tunable for the failure-case demo.
+promotion_criteria:
+  agreement_rate:
+    # Below the minimum: too much disagreement to trust the challenger.
+    minimum: 0.85
+    # Above the maximum: challenger is suspiciously similar to the champion and
+    # may not be meaningfully different.
+    maximum: 0.99
+  latency_p95_ms:
+    challenger_max: 200
+    delta_vs_champion_max_pct: 20
+  disparate_impact:
+    # Four-fifths rule: each protected group's selection-rate ratio must be at
+    # least this fraction of the highest-rate group.
+    max_ratio_per_group: 0.80
+    must_not_be_worse_than_champion: true
+  minimum_observations: 1000
+  minimum_observations_per_protected_group: 100
+rollback_criteria:
+  post_promotion_accuracy_drop_pct: 5
+  post_promotion_error_rate_increase_pct: 50
+  evaluation_window_minutes: 60

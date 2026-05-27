@@ -1,0 +1,4 @@
+# traffic-generator uses urllib from the standard library for HTTP and the
+# boto3 bundled in the Lambda Python 3.12 runtime for S3. boto3 is listed for
+# local testing via the workspace dev dependencies.
+boto3

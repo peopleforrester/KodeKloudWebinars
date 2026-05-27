@@ -31,22 +31,22 @@ are preserved verbatim (`MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/`
 - [x] 2. MLOps_Deployment_Workshop scaffolding (README + placeholder sessions)
 - [x] 3. Shared audit_trail Terraform module — tfsec/checkov/tflint/fmt GREEN
 - [x] 4. Session 2 model training — agreement 0.9284 (in 90-94% band); challenger retuned per spec validation clause
-- [ ] 5. Lambda: shadow-mirror + tests
-- [ ] 6. Lambda: comparison + tests
-- [ ] 7. Lambda: traffic-generator + tests
+- [x] 5. Lambda: shadow-mirror + tests (98% cov)
+- [x] 6. Lambda: comparison + tests (96% cov)
+- [x] 7. Lambda: traffic-generator + tests (89% cov)
 - [ ] 8. Session 2 Terraform (5 modules + main composition)
 - [ ] 9. GitHub Actions workflows (deploy/promote/rollback/ci)
-- [ ] 10. promotion-criteria.yaml
+- [x] 10. promotion-criteria.yaml
 - [ ] 11. Lab guide + docs
-- [ ] 12. Testing (handlers ≥80% coverage; terraform validate)
+- [~] 12. Testing — pytest 19 pass, 95% cov on handlers; terraform validate pending Section 8
 - [ ] 13. Per-attendee provisioning scripts
 - [ ] 14. Acceptance verification — PARTIAL (agreement rate local; rest DEFERRED)
 
 ## Last completed step
-Section 4 (models). Challenger hyperparameters adjusted (8/150 -> 16/80/mf=0.3) to hit the 90-94% band; documented in models/README.md. FLAG for Michael.
+Sections 5,6,7,10,12: three Lambdas + shared criteria evaluator + tests (19 pass, 95% cov). Challenger retune (8/150->16/80/mf=0.3) still flagged.
 
 ## Next step
-Section 10 (promotion-criteria.yaml), then Sections 5-7 (Lambdas + tests).
+Section 8 (Terraform modules + composition), then 9 (workflows), 11 (docs), 13 (scripts).
 
 ## Containment / deviation notes
 - `Agentic_DevOps/` does not exist under NFCU-session-2; isolation tasks are
