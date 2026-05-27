@@ -29,11 +29,14 @@ this repo is archived webinar collateral; the workflow is illustrative and
 self-contained, not a live pipeline. Recorded so no one "fixes" it by moving it
 to the repo root, which would violate the touch boundary.
 
-## Branch
+## Branch (shared-worktree caveat)
 
-Work happens on `feat/nfcu-session-3-monitoring` (branched from the local
-`feat/nfcu-session-1-bootstrap`, which carries an unrelated parallel session-1
-effort). Not pushed. No commits to `main`.
+This working tree is shared by parallel agents building NFCU sessions 1–4. HEAD
+moved between branches mid-build, so all commits landed interleaved on one branch
+line (current tip = the Phase 9/10 work). The `feat/nfcu-session-3-monitoring`
+ref never advanced past the base. Every NFCU-session-3 commit was scoped to
+`NFCU-session-3/` only (verified per commit). Not pushed; no commits to `main`.
+Michael should reconcile branches before any push — do not untangle destructively.
 
 ## Local toolchain (what "verified" means here)
 
