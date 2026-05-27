@@ -1,0 +1,10 @@
+# evidently-runner (container image) dependencies.
+#
+# Pinned per design decision D1. RE-VERIFY ON PyPI no earlier than June 9, 2026
+# and no later than June 11 — see PIN_VERIFICATION.md. If a stable 0.7.22+ is
+# available, bump and re-test; if 0.8.x is available, do NOT auto-bump (Michael
+# reviews — the API may change).
+evidently==0.7.21
+pandas>=2.2
+pyarrow>=15.0
+boto3>=1.34
