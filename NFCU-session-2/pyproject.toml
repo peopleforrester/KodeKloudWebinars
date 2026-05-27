@@ -1,0 +1,61 @@
+# ABOUTME: Workspace-style project config for the KodeKloud MLOps workshop repo.
+# ABOUTME: Pins Python 3.12, dev tooling, and scopes all checks away from Agentic_DevOps/.
+[project]
+name = "mlops-deployment-workshop"
+version = "0.2.0"
+description = "KodeKloud MLOps Deployment Workshop — runnable lab artifacts"
+requires-python = ">=3.12,<3.13"
+license = { text = "Apache-2.0" }
+
+[dependency-groups]
+dev = [
+    "ruff",
+    "mypy",
+    "pytest",
+    "pytest-cov",
+    "moto",
+    "boto3",
+    "scikit-learn",
+    "pandas",
+    "numpy",
+    "pyyaml",
+    "checkov",
+    "pre-commit",
+]
+
+# Each runnable session under MLOps_Deployment_Workshop/ is treated as a package
+# root. Collateral-only webinars (e.g. Agentic_DevOps/) are deliberately excluded
+# from every runnable-code check below so doc-only PRs never trip CI.
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["Agentic_DevOps", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = [
+    "MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/lambdas",
+    "MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/models",
+    "MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/tests",
+]
+# Lambda handlers live in hyphenated directories that are not importable as
+# packages; mypy analyzes them as standalone modules.
+explicit_package_bases = true
+namespace_packages = true
+
+[[tool.mypy.overrides]]
+module = ["sklearn.*", "pandas.*", "joblib.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["MLOps_Deployment_Workshop"]
+python_files = ["test_*.py"]
+addopts = "-ra"
+
+[tool.coverage.run]
+branch = true
