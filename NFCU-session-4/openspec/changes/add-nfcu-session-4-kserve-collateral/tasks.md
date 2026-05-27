@@ -97,16 +97,16 @@ Checkboxes are updated live as the run progresses. See `../../../RUN_CONFIG.md` 
 
 ## 9. Attendee collateral (nfcu-session-4-collateral)
 
-- [ ] 9.1 `attendee-guide/README.md`
-- [ ] 9.2 `attendee-guide/prerequisites.md`
-- [ ] 9.3 `attendee-guide/lab-1-deploy-inferenceservice.md`
-- [ ] 9.4 `attendee-guide/lab-2-load-test-and-scaling.md`
-- [ ] 9.5 `attendee-guide/lab-3-llm-and-costs.md`
-- [ ] 9.6 `attendee-guide/lab-4-canary-rollout.md`
-- [ ] 9.7 `attendee-guide/reproduce-on-your-aws-account.md`
-- [ ] 9.8 `attendee-guide/post-session-monday-actions.md`
-- [ ] 9.9 `attendee-guide/faq.md`
-- [ ] 9.10 `reference-card/kserve-on-k8s.md`
+- [x] 9.1 `attendee-guide/README.md`
+- [x] 9.2 `attendee-guide/prerequisites.md`
+- [x] 9.3 `attendee-guide/lab-1-deploy-inferenceservice.md`
+- [x] 9.4 `attendee-guide/lab-2-load-test-and-scaling.md`
+- [x] 9.5 `attendee-guide/lab-3-llm-and-costs.md`
+- [x] 9.6 `attendee-guide/lab-4-canary-rollout.md`
+- [x] 9.7 `attendee-guide/reproduce-on-your-aws-account.md`
+- [x] 9.8 `attendee-guide/post-session-monday-actions.md`
+- [x] 9.9 `attendee-guide/faq.md`
+- [x] 9.10 `reference-card/kserve-on-k8s.md`
 
 ## 10. Operations runbook (nfcu-session-4-operations-runbook)
 
