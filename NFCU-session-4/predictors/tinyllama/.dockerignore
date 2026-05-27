@@ -1,0 +1,5 @@
+# Only the predictor code and deps manifest belong in the build context.
+*
+!server.py
+!health.py
+!pyproject.toml

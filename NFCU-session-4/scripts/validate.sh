@@ -21,7 +21,7 @@ section "yamllint"
 if have yamllint; then
   # Exclude vendored terraform; .disabled reference manifests are not matched.
   mapfile -t YAML_FILES < <(find . -type f \( -name '*.yaml' -o -name '*.yml' \) \
-      -not -path './.terraform/*')
+      -not -path '*/.terraform/*' -not -path '*/.git/*')
   if [[ ${#YAML_FILES[@]} -eq 0 ]]; then
     echo "   (no yaml files yet)"
   elif yamllint -c .yamllint "${YAML_FILES[@]}"; then
@@ -86,11 +86,19 @@ else
   skip "kustomize/kubectl"
 fi
 
+# --- Manifests (structural; offline substitute for kubectl dry-run) ---------
+section "manifest structure"
+if have python3 && [[ -d manifests ]]; then
+  if python3 scripts/check-manifests.py; then :; else fail "manifest structure"; fi
+else
+  echo "   (no manifests dir or python3)"
+fi
+
 # --- Shell scripts ----------------------------------------------------------
 section "bash -n (syntax)"
 while IFS= read -r f; do
   if bash -n "$f"; then :; else fail "bash -n $f"; fi
-done < <(find . -type f -name '*.sh' -not -path './.terraform/*')
+done < <(find . -type f -name '*.sh' -not -path '*/.terraform/*' -not -path '*/.git/*')
 echo "   ok"
 
 # --- Python -----------------------------------------------------------------
@@ -98,10 +106,23 @@ section "python compile"
 if have python3; then
   while IFS= read -r f; do
     if python3 -m py_compile "$f"; then :; else fail "py_compile $f"; fi
-  done < <(find . -type f -name '*.py')
+  done < <(find . -type f -name '*.py' -not -path '*/.terraform/*' -not -path '*/.git/*')
   echo "   ok"
 else
   skip python3
+fi
+
+# --- k6 / JavaScript syntax -------------------------------------------------
+section "javascript syntax (node --check)"
+if have node; then
+  found=0
+  while IFS= read -r f; do
+    found=1
+    if node --check "$f"; then :; else fail "node --check $f"; fi
+  done < <(find . -type f -name '*.js' -not -path '*/.terraform/*' -not -path '*/.git/*' -not -path '*/node_modules/*')
+  [[ "$found" == "1" ]] && echo "   ok" || echo "   (no js files)"
+else
+  skip "node (k6 scripts not parse-checked)"
 fi
 
 # --- Tools we cannot run here ----------------------------------------------

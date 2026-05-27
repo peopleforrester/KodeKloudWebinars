@@ -1,0 +1,37 @@
+# ABOUTME: Knative Serving config patches (ConfigMaps) applied after the core release YAML.
+# ABOUTME: Sets concurrency-based autoscaling and scale-to-zero — the heart of Lab 1/2.
+#
+# component:  Knative Serving
+# version:    1.15.2        (release YAML, applied via kubectl — Knative ships manifests,
+#                            not a Helm chart; the operator path is intentionally avoided)
+# appVersion: 1.15.2
+# repo:       https://github.com/knative/serving  (releases/download/knative-v1.15.2/)
+# why this version: the Knative Serving release KServe 0.16.0 validates against
+#                   (KServe v0.16.0 hack/quick_install.sh).
+#
+# bootstrap.sh applies the core manifests, then `kubectl apply -f` of this file to patch
+# the autoscaler. config-domain is set per-environment by the bootstrap (sslip.io locally).
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-autoscaler
+  namespace: knative-serving
+data:
+  # Scale to zero so idle InferenceServices cost nothing (Lab 1 scenario).
+  enable-scale-to-zero: "true"
+  # Drop to zero ~30s after the last request; the lab asserts pods gone within 60s idle.
+  scale-to-zero-grace-period: "30s"
+  scale-to-zero-pod-retention-period: "0s"
+  # Concurrency-based scaling window.
+  stable-window: "60s"
+  panic-window-percentage: "10.0"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-deployment
+  namespace: knative-serving
+data:
+  # Allow the KServe storage-initializer init container image to be pulled.
+  registries-skipping-tag-resolving: "kind.local,ko.local,dev.local"

@@ -1,0 +1,12 @@
+# One stamped attendee namespace. The lab platform mass-produces these by templating the
+# `namespace:` value (e.g., attendee-0001 … attendee-0030) — one overlay per attendee, or
+# a loop that runs `kubectl kustomize` with the namespace substituted. Changing the single
+# line below is the entire per-attendee diff.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# This is the only value that changes per attendee.
+namespace: attendee-sample
+
+resources:
+  - ../../base

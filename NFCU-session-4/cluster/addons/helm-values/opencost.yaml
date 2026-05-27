@@ -1,0 +1,29 @@
+# ABOUTME: OpenCost values — wires OpenCost to the in-cluster Prometheus for per-model
+# ABOUTME: cost attribution (Lab 3). Reads pod resource usage and prices it.
+#
+# chart:      opencost
+# chartVersion: 2.5.21
+# appVersion: 1.120.2
+# repo:       https://opencost.github.io/opencost-helm-chart
+# why this version: current stable; OpenCost is decoupled from KServe versioning.
+
+opencost:
+  prometheus:
+    # Point at the kube-prometheus-stack Prometheus service (same cluster).
+    internal:
+      enabled: true
+      serviceName: kube-prometheus-stack-prometheus
+      namespaceName: monitoring
+      port: 9090
+
+  exporter:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 55Mi
+      limits:
+        memory: 128Mi
+
+  ui:
+    # The UI is handy for the live demo; ClusterIP + port-forward keeps it private.
+    enabled: true

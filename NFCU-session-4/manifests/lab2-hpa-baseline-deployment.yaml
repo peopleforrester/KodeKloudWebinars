@@ -1,0 +1,82 @@
+# Lab 2 — The "wrong way" baseline: the SAME XGBoost model served as a plain Deployment
+# with a CPU-based HorizontalPodAutoscaler. Run k6 against this and against the Lab 1
+# InferenceService to see HPA-on-CPU lag behind KServe's concurrency-based scaling.
+#
+# The model must be present at /mnt/models/model-v1.0.0 — mount the same PVC used by the
+# local Lab 1 path, or bake it into an image. (KServe's storage initializer is exactly the
+# convenience this baseline lacks — that's the teaching point.)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xgboost-hpa-baseline
+  labels:
+    nfcu-session-4/lab: "2"
+    app: xgboost-hpa-baseline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: xgboost-hpa-baseline
+  template:
+    metadata:
+      labels:
+        app: xgboost-hpa-baseline
+    spec:
+      containers:
+        - name: xgbserver
+          image: kserve/xgbserver:v0.16.0
+          args:
+            - --model_name=adult-income
+            - --model_dir=/mnt/models/model-v1.0.0
+            - --http_port=8080
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: "250m"
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: model-store
+              mountPath: /mnt/models
+      volumes:
+        - name: model-store
+          persistentVolumeClaim:
+            claimName: model-store
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xgboost-hpa-baseline
+  labels:
+    nfcu-session-4/lab: "2"
+spec:
+  selector:
+    app: xgboost-hpa-baseline
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: xgboost-hpa-baseline
+  labels:
+    nfcu-session-4/lab: "2"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: xgboost-hpa-baseline
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50

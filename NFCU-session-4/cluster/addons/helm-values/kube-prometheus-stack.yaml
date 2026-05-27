@@ -1,0 +1,43 @@
+# ABOUTME: Minimal kube-prometheus-stack values for the demo — Prometheus + Grafana only,
+# ABOUTME: no Alertmanager, 24h retention (the cluster lives less than a day).
+#
+# chart:      kube-prometheus-stack
+# chartVersion: 85.3.3
+# appVersion: v0.90.1   (Prometheus Operator)
+# repo:       https://prometheus-community.github.io/helm-charts
+# why this version: current stable; the observability stack is not version-coupled to
+#                   KServe, and 85.x supports Kubernetes 1.34-1.36.
+
+# No Alertmanager — nobody is on call for a 2-hour workshop.
+alertmanager:
+  enabled: false
+
+prometheus:
+  prometheusSpec:
+    # The cluster is torn down same-day; one day of retention is plenty and keeps memory low.
+    retention: 24h
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        memory: 1Gi
+    # Discover ServiceMonitors/PodMonitors in all namespaces (KServe, OpenCost).
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+grafana:
+  enabled: true
+  # Demo-only credentials. Fine for an ephemeral cluster; never reuse anywhere real.
+  adminPassword: kserve-demo
+  defaultDashboardsTimezone: browser
+  service:
+    type: ClusterIP
+
+# Trim components irrelevant to the session to speed up bootstrap.
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false

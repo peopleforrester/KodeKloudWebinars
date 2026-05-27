@@ -1,0 +1,21 @@
+# ABOUTME: Helm values for cert-manager — KServe's webhook certificates depend on it.
+# ABOUTME: Installed first in the add-ons bootstrap order.
+#
+# chart:      cert-manager
+# chartVersion: v1.16.1
+# appVersion: v1.16.1
+# repo:       https://charts.jetstack.io
+# why this version: pinned to the cert-manager release KServe 0.16.0 validates against
+#                   (see KServe v0.16.0 hack/quick_install.sh).
+
+# Install the CRDs as part of the chart so the bootstrap is single-step.
+crds:
+  enabled: true
+
+# Small footprint for a demo cluster.
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi

@@ -1,0 +1,21 @@
+# kind cluster for Session 4 rehearsal: 1 control-plane + 2 workers, CPU-only.
+# The control-plane node maps the Kourier NodePort (31080) plus 80/443 to the host so
+# `curl localhost` reaches InferenceServices. bootstrap.sh local patches the kourier
+# Service to NodePort 31080 to match the 31080 mapping below.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: nfcu-session-4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 31080   # Kourier NodePort (set by bootstrap.sh local)
+        hostPort: 31080
+        protocol: TCP
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 443
+        protocol: TCP
+  - role: worker
+  - role: worker

@@ -1,0 +1,29 @@
+# ABOUTME: AWS Load Balancer Controller values (EKS only) — fronts Kourier with an NLB.
+# ABOUTME: Uses the IRSA role provisioned by cluster/eks/terraform (no static credentials).
+#
+# chart:      aws-load-balancer-controller
+# chartVersion: 3.3.0
+# appVersion: v3.3.0
+# repo:       https://aws.github.io/eks-charts
+# why this version: current stable; supports Kubernetes 1.34-1.36.
+#
+# NOT installed on local kind — there is no AWS load balancer there. bootstrap.sh skips
+# this component unless invoked as `bootstrap.sh eks`.
+#
+# bootstrap.sh fills in clusterName and the IRSA role ARN (from `terraform output`) via
+# --set overrides, so this file holds only the static configuration.
+
+# clusterName is injected by bootstrap.sh: --set clusterName=<cluster>
+serviceAccount:
+  create: true
+  name: aws-load-balancer-controller
+  # annotations.eks.amazonaws.com/role-arn is injected by bootstrap.sh from terraform output.
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 96Mi
+  limits:
+    memory: 192Mi

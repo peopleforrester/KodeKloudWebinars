@@ -1,0 +1,26 @@
+# Lab 4 (step 2 of 3) — PROMOTE v1.0.1 to 100%. Identical to the canary manifest except
+# canaryTrafficPercent is REMOVED: with no split specified, all traffic goes to the latest
+# (v1.0.1) revision. v1.0.0 remains as the previous good revision for instant rollback.
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: adult-income-classifier
+  labels:
+    nfcu-session-4/lab: "4"
+spec:
+  predictor:
+    minReplicas: 0
+    maxReplicas: 5
+    containerConcurrency: 50
+    serviceAccountName: kserve-sa
+    model:
+      modelFormat:
+        name: xgboost
+      storageUri: "s3://REPLACE_WITH_BUCKET/model-v1.0.1"
+      resources:
+        requests:
+          cpu: "250m"
+          memory: 512Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi
