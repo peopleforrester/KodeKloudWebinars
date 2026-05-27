@@ -1,0 +1,4 @@
+# Runtime dependencies for incident-simulator (zip package).
+#
+# boto3 is provided by the Lambda Python 3.11 runtime. The scenarios use only the
+# standard library plus boto3, so no extra packages are required.
