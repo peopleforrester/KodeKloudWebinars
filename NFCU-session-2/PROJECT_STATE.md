@@ -34,19 +34,37 @@ are preserved verbatim (`MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/`
 - [x] 5. Lambda: shadow-mirror + tests (98% cov)
 - [x] 6. Lambda: comparison + tests (96% cov)
 - [x] 7. Lambda: traffic-generator + tests (89% cov)
-- [ ] 8. Session 2 Terraform (5 modules + main composition)
-- [x] 9. GitHub Actions workflows (deploy/promote/rollback/ci) — YAML valid
+- [x] 8. Session 2 Terraform (5 modules + composition + SageMaker) — fmt/validate/tflint/tfsec(90 pass,0 prob)/checkov(151 pass,0 fail)/kics(0 high+crit) GREEN
+- [x] 9. GitHub Actions workflows (deploy/promote/rollback/ci) — YAML valid; path-filters verified
 - [x] 10. promotion-criteria.yaml
 - [x] 11. Lab guide + docs (LAB_GUIDE, architecture, runbook, why-fanout, README)
-- [~] 12. Testing — pytest 19 pass, 95% cov on handlers; terraform validate pending Section 8
+- [x] 12. Testing — pytest 19 pass, 97% total cov; validate-session-2.sh + validate-local.sh exit 0
 - [x] 13. Scripts (validate-session-2, provision, teardown, verify-endpoints, trigger-traffic)
-- [ ] 14. Acceptance verification — PARTIAL (agreement rate local; rest DEFERRED)
+- [~] 14. Acceptance verification — locally verifiable items DONE; live-AWS items DEFERRED (below)
+
+## Definition of Done status
+- [x] validate-local.sh exits 0 from repo root (97% cov, 19 tests)
+- [x] validate-session-2.sh exits 0 standalone
+- [x] All Terraform modules pass terraform validate
+- [x] Checkov/tfsec/tflint zero unaddressed findings (kics 0 high/crit)
+- [x] pytest 0 failures, >=80% on handlers (96/96/89/100%)
+- [x] verify_agreement.py reports 0.9284 (in 90-94%)
+- [x] Promotion gate evaluates BOTH pass and fail (criteria.py unit + CLI tests)
+- [x] Audit entry schema has all 8 required fields (static check)
+- [x] LAB_GUIDE caveats present; README prod-vs-lab gaps present
+- [x] Path-filters: no session-2 workflow references Agentic_DevOps/Session_3
+- [ ] DEFERRED (need live env/human): terraform apply to AWS, SageMaker endpoints,
+      live Actions PR-trigger runs (14.7/14.8 logic verified statically),
+      lab-engineer dry-run (14.1), per-attendee cost (14.6), FinOps sign-off
 
 ## Last completed step
-Sections 5,6,7,10,12: three Lambdas + shared criteria evaluator + tests (19 pass, 95% cov). Challenger retune (8/150->16/80/mf=0.3) still flagged.
+End-to-end: validate-session-2.sh and validate-local.sh both exit 0. All 14
+sections complete to the extent achievable without live AWS.
 
 ## Next step
-Await Terraform agent (Section 8), then run validate-session-2.sh + validate-local.sh end-to-end; Section 14 partial.
+None outstanding for the local build. Remaining items require a live AWS sandbox
+and human sign-off (see DEFERRED above). Awaiting Michael's call on the two flags
+(challenger hyperparameters; workflow placement under NFCU-session-2/.github/).
 
 ## Containment / deviation notes
 - `Agentic_DevOps/` does not exist under NFCU-session-2; isolation tasks are

@@ -21,7 +21,9 @@ shopt -u nullglob
 
 echo "==> Cross-cutting checks (excluding Agentic_DevOps/)"
 ruff check . --extend-exclude Agentic_DevOps
-ruff format --check . --extend-exclude Agentic_DevOps
+# ruff format has no --extend-exclude flag; the exclusion comes from pyproject.toml
+# ([tool.ruff] extend-exclude includes Agentic_DevOps and .venv).
+ruff format --check .
 # Each lambda handler.py is type-checked from its own directory: the hyphenated
 # lambda dirs share the basename handler.py and cannot be checked in one process.
 for handler_dir in MLOps_Deployment_Workshop/*/lambdas/*/; do
