@@ -39,11 +39,11 @@ Checkboxes are updated live as the run progresses. See `../../../RUN_CONFIG.md` 
 
 ## 4. Local cluster (nfcu-session-4-local-cluster)
 
-- [ ] 4.1 `cluster/local/README.md`
-- [ ] 4.2 `cluster/local/kind-config.yaml`
-- [ ] 4.3 `cluster/local/up.sh`
-- [ ] 4.4 `cluster/local/down.sh`
-- [ ] 4.5 Min laptop spec documented
+- [x] 4.1 `cluster/local/README.md`
+- [x] 4.2 `cluster/local/kind-config.yaml`
+- [x] 4.3 `cluster/local/up.sh`
+- [x] 4.4 `cluster/local/down.sh`
+- [x] 4.5 Min laptop spec documented
 
 ## 5. Per-attendee overlays (nfcu-session-4-lab-overlays)
 

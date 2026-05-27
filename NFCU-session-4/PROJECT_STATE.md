@@ -33,7 +33,7 @@ Recovery tags (in the shared repo's object store): `nfcu-s4-phase0-scaffold`, `n
 - [x] Phase 1 — Repo scaffolding: README, .gitignore, Makefile, validate harness (root README edit deferred)
 - [x] Phase 2 — EKS Terraform module (cluster/eks) — terraform validate passes against real modules
 - [x] Phase 3 — Cluster add-ons bootstrap (cluster/addons) — bootstrap.sh, verify.sh, 7 version-pinned helm-values
-- [ ] Phase 4 — Local kind cluster (cluster/local)
+- [x] Phase 4 — Local kind cluster (cluster/local)
 - [ ] Phase 5 — Lab overlays (cluster/lab-overlays)
 - [ ] Phase 6 — InferenceService manifests (manifests/)
 - [ ] Phase 7 — TinyLlama predictor image (predictors/tinyllama)
@@ -45,15 +45,14 @@ Recovery tags (in the shared repo's object store): `nfcu-s4-phase0-scaffold`, `n
 
 ## Last completed step
 
-Phase 3 complete. Add-ons bootstrap (ordered, idempotent, fails-loud) + verify.sh +
-7 version-pinned helm-values. Versions verified against KServe 0.16.0's quick_install
-(cert-manager v1.16.1, Knative 1.15.2, Kourier knative-v1.15.0, KServe v0.16.0) and
-current charts (kube-prometheus-stack 85.3.3, OpenCost 2.5.21, ALB 3.3.0). validate clean.
+Phase 4 complete. Local kind path: kind-config.yaml (1 cp + 2 workers, ports 80/443/31080),
+idempotent up.sh (create + bootstrap local + verify), down.sh, README with 16 GB min spec.
 
 ## Next step
 
-Phase 4 — `cluster/local/`: kind-config.yaml (3 nodes, ports 80/443/31080), up.sh
-(create kind + bootstrap local), down.sh, README with 16 GB min laptop spec.
+Phase 5 — `cluster/lab-overlays/`: kustomize base (namespace, resourcequota 4cpu/8Gi/10pods,
+deny-cross-namespace networkpolicy, serviceaccount with IRSA annotation placeholder) +
+attendee-sample overlay + README. Validate with `kubectl kustomize build`.
 
 ## Notes / decisions
 
