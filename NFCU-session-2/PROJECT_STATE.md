@@ -35,18 +35,18 @@ are preserved verbatim (`MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/`
 - [x] 6. Lambda: comparison + tests (96% cov)
 - [x] 7. Lambda: traffic-generator + tests (89% cov)
 - [ ] 8. Session 2 Terraform (5 modules + main composition)
-- [ ] 9. GitHub Actions workflows (deploy/promote/rollback/ci)
+- [x] 9. GitHub Actions workflows (deploy/promote/rollback/ci) — YAML valid
 - [x] 10. promotion-criteria.yaml
-- [ ] 11. Lab guide + docs
+- [x] 11. Lab guide + docs (LAB_GUIDE, architecture, runbook, why-fanout, README)
 - [~] 12. Testing — pytest 19 pass, 95% cov on handlers; terraform validate pending Section 8
-- [ ] 13. Per-attendee provisioning scripts
+- [x] 13. Scripts (validate-session-2, provision, teardown, verify-endpoints, trigger-traffic)
 - [ ] 14. Acceptance verification — PARTIAL (agreement rate local; rest DEFERRED)
 
 ## Last completed step
 Sections 5,6,7,10,12: three Lambdas + shared criteria evaluator + tests (19 pass, 95% cov). Challenger retune (8/150->16/80/mf=0.3) still flagged.
 
 ## Next step
-Section 8 (Terraform modules + composition), then 9 (workflows), 11 (docs), 13 (scripts).
+Await Terraform agent (Section 8), then run validate-session-2.sh + validate-local.sh end-to-end; Section 14 partial.
 
 ## Containment / deviation notes
 - `Agentic_DevOps/` does not exist under NFCU-session-2; isolation tasks are

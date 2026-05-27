@@ -1,0 +1,76 @@
+# Deploys the Session 2 challenger SageMaker endpoint and waits for InService.
+# Scoped to Session 2 via filename prefix + paths filter + working-directory.
+name: session-2-deploy-challenger
+
+on:
+  workflow_dispatch:
+    inputs:
+      attendee_id:
+        description: Attendee identifier
+        required: true
+  push:
+    branches: [main]
+    paths:
+      - 'MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/**'
+      - 'shared/terraform-modules/audit_trail/**'
+      - '.github/workflows/session-2-deploy-challenger.yml'
+
+permissions:
+  id-token: write
+  contents: read
+
+defaults:
+  run:
+    working-directory: MLOps_Deployment_Workshop/Session_2_Shadow_Deployment
+
+jobs:
+  deploy-challenger:
+    runs-on: ubuntu-latest
+    env:
+      ATTENDEE_ID: ${{ github.event.inputs.attendee_id }}
+      AWS_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.6.6'
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_OIDC_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Terraform apply
+        run: |
+          terraform -chdir=terraform init
+          terraform -chdir=terraform apply -auto-approve \
+            -var="attendee_id=${ATTENDEE_ID}"
+
+      - name: Wait for challenger InService (15-minute budget)
+        run: |
+          endpoint="workshop-lab-${ATTENDEE_ID}-challenger"
+          deadline=$(( $(date +%s) + 900 ))
+          while true; do
+            status=$(aws sagemaker describe-endpoint --endpoint-name "$endpoint" \
+              --query EndpointStatus --output text 2>/dev/null || echo "Creating")
+            echo "status=$status"
+            if [ "$status" = "InService" ]; then break; fi
+            if [ "$status" = "Failed" ]; then echo "::error::endpoint failed"; exit 1; fi
+            if [ "$(date +%s)" -ge "$deadline" ]; then
+              echo "::error::endpoint not InService within 15 minutes"; exit 1
+            fi
+            sleep 30
+          done
+          arn=$(aws sagemaker describe-endpoint --endpoint-name "$endpoint" \
+            --query EndpointArn --output text)
+          {
+            echo "### Challenger deployed"
+            echo "- Endpoint: \`$endpoint\`"
+            echo "- ARN: \`$arn\`"
+          } >> "$GITHUB_STEP_SUMMARY"

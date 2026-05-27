@@ -1,0 +1,65 @@
+# Cross-cutting CI. Always runs root lint (never against Agentic_DevOps/). Runs a
+# session's validation only when that session's files change. Doc-only PRs and
+# any change under Agentic_DevOps/ trigger no runnable-code checks.
+name: ci
+
+on:
+  pull_request:
+    paths-ignore:
+      - 'Agentic_DevOps/**'
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'Agentic_DevOps/**'
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      session_2: ${{ steps.filter.outputs.session_2 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            session_2:
+              - 'MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/**'
+              - 'shared/terraform-modules/audit_trail/**'
+
+  root-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv tool install ruff
+      - name: Lint (excluding Agentic_DevOps/)
+        run: |
+          ruff check . --extend-exclude Agentic_DevOps
+          ruff format --check . --extend-exclude Agentic_DevOps
+
+  session-2:
+    needs: changes
+    if: ${{ needs.changes.outputs.session_2 == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: MLOps_Deployment_Workshop/Session_2_Shadow_Deployment
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.6.6'
+      - uses: astral-sh/setup-uv@v5
+      - name: Install dev dependencies
+        run: uv pip install --system ruff mypy pytest pytest-cov moto boto3 scikit-learn pandas numpy pyyaml checkov
+      - name: Install tflint
+        uses: terraform-linters/setup-tflint@v4
+      - name: Run Session 2 validation
+        run: bash scripts/validate-session-2.sh

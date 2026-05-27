@@ -1,0 +1,120 @@
+# Evaluates promotion criteria against the latest comparison result and, if all
+# criteria pass and dry_run=false, flips traffic by swapping the shadow-mirror
+# Lambda's champion/challenger endpoint env vars. Emits an audit entry.
+name: session-2-promote-challenger
+
+on:
+  workflow_dispatch:
+    inputs:
+      attendee_id:
+        description: Attendee identifier
+        required: true
+      dry_run:
+        description: Evaluate only; make no changes
+        type: boolean
+        default: true
+
+permissions:
+  id-token: write
+  contents: read
+
+defaults:
+  run:
+    working-directory: MLOps_Deployment_Workshop/Session_2_Shadow_Deployment
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    # The `promotion` environment carries the required-reviewers gate. In a real
+    # deployment this is a calendared multi-reviewer sign-off (model owner,
+    # validator, deploying engineer, risk officer). For the workshop the
+    # workshop-approver-bot GitHub App is configured as the required reviewer and
+    # auto-approves; see docs/architecture.md.
+    environment: promotion
+    env:
+      ATTENDEE_ID: ${{ github.event.inputs.attendee_id }}
+      DRY_RUN: ${{ github.event.inputs.dry_run }}
+      AWS_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install pyyaml
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_OIDC_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Fetch latest comparison result
+        run: |
+          aws s3 cp "s3://workshop-lab-${ATTENDEE_ID}-comparison-results/latest.json" latest.json
+
+      - name: Evaluate promotion criteria
+        id: gate
+        run: |
+          set +e
+          python lambdas/comparison/criteria.py \
+            --metrics latest.json \
+            --criteria config/promotion-criteria.yaml > verdict.json
+          code=$?
+          cat verdict.json
+          if [ "$code" -ne 0 ]; then
+            reasons=$(python -c "import json;print('; '.join(json.load(open('verdict.json'))['failure_reasons']))" 2>/dev/null || echo "see verdict")
+            echo "::error::criteria not met: ${reasons}"
+            exit 1
+          fi
+
+      - name: Dry-run notice
+        if: ${{ env.DRY_RUN == 'true' }}
+        run: echo "criteria met, promotion approved (dry run, no changes made)"
+
+      - name: Flip traffic and write audit entry
+        if: ${{ env.DRY_RUN != 'true' }}
+        run: |
+          fn="shadow-mirror-${ATTENDEE_ID}"
+          python - "$fn" <<'PY'
+          import datetime, json, os, subprocess, sys, uuid, yaml
+
+          fn = sys.argv[1]
+          attendee = os.environ["ATTENDEE_ID"]
+          region = os.environ["AWS_REGION"]
+
+          def aws(*args: str) -> str:
+              return subprocess.check_output(["aws", *args], text=True)
+
+          cfg = json.loads(aws("lambda", "get-function-configuration", "--function-name", fn))
+          env = cfg["Environment"]["Variables"]
+          prev_champion = env["CHAMPION_ENDPOINT_ARN"]
+          prev_challenger = env["CHALLENGER_ENDPOINT_ARN"]
+          env["CHAMPION_ENDPOINT_ARN"], env["CHALLENGER_ENDPOINT_ARN"] = prev_challenger, prev_champion
+          aws("lambda", "update-function-configuration", "--function-name", fn,
+              "--environment", json.dumps({"Variables": env}))
+
+          criteria = yaml.safe_load(open("config/promotion-criteria.yaml"))
+          verdict = json.load(open("verdict.json"))
+          metrics = json.load(open("latest.json")).get("metrics", {})
+          event_id = str(uuid.uuid4())
+          now = datetime.datetime.now(datetime.UTC)
+          entry = {
+              "event_type": "promotion_completed",
+              "timestamp": now.isoformat(),
+              "actor": os.environ.get("GITHUB_ACTOR", "workshop-approver-bot"),
+              "previous_champion_endpoint_arn": prev_champion,
+              "new_champion_endpoint_arn": prev_challenger,
+              "criteria_snapshot": {"thresholds": criteria, "evaluated_metrics": metrics,
+                                     "criteria_evaluated": verdict["criteria_evaluated"]},
+              "workflow_run_url": f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+              "git_commit_sha": os.environ["GITHUB_SHA"],
+          }
+          key = f"audit/{now:%Y-%m-%d}/{event_id}.json"
+          with open("audit-entry.json", "w") as fh:
+              json.dump(entry, fh, indent=2)
+          aws("s3", "cp", "audit-entry.json", f"s3://workshop-lab-{attendee}-audit/{key}")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as fh:
+              fh.write(f"### Promotion completed\n- Audit entry: `s3://workshop-lab-{attendee}-audit/{key}`\n")
+          PY

@@ -1,0 +1,78 @@
+# Reverts the shadow-mirror traffic flip by swapping the champion/challenger
+# endpoint env vars back, and emits a rollback audit entry.
+name: session-2-rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      attendee_id:
+        description: Attendee identifier
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+defaults:
+  run:
+    working-directory: MLOps_Deployment_Workshop/Session_2_Shadow_Deployment
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    env:
+      ATTENDEE_ID: ${{ github.event.inputs.attendee_id }}
+      AWS_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_OIDC_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Revert traffic flip and write audit entry
+        run: |
+          fn="shadow-mirror-${ATTENDEE_ID}"
+          python - "$fn" <<'PY'
+          import datetime, json, os, subprocess, sys, uuid
+
+          fn = sys.argv[1]
+          attendee = os.environ["ATTENDEE_ID"]
+
+          def aws(*args: str) -> str:
+              return subprocess.check_output(["aws", *args], text=True)
+
+          cfg = json.loads(aws("lambda", "get-function-configuration", "--function-name", fn))
+          env = cfg["Environment"]["Variables"]
+          prev_champion = env["CHAMPION_ENDPOINT_ARN"]
+          prev_challenger = env["CHALLENGER_ENDPOINT_ARN"]
+          # Reverse operation: swap back to the previous champion.
+          env["CHAMPION_ENDPOINT_ARN"], env["CHALLENGER_ENDPOINT_ARN"] = prev_challenger, prev_champion
+          aws("lambda", "update-function-configuration", "--function-name", fn,
+              "--environment", json.dumps({"Variables": env}))
+
+          event_id = str(uuid.uuid4())
+          now = datetime.datetime.now(datetime.UTC)
+          entry = {
+              "event_type": "rollback_completed",
+              "timestamp": now.isoformat(),
+              "actor": os.environ.get("GITHUB_ACTOR", "workshop-approver-bot"),
+              "previous_champion_endpoint_arn": prev_champion,
+              "new_champion_endpoint_arn": prev_challenger,
+              "criteria_snapshot": {"note": "rollback is unconditional; no criteria evaluated"},
+              "workflow_run_url": f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+              "git_commit_sha": os.environ["GITHUB_SHA"],
+          }
+          key = f"audit/{now:%Y-%m-%d}/{event_id}.json"
+          with open("audit-entry.json", "w") as fh:
+              json.dump(entry, fh, indent=2)
+          aws("s3", "cp", "audit-entry.json", f"s3://workshop-lab-{attendee}-audit/{key}")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as fh:
+              fh.write(f"### Rollback completed\n- Audit entry: `s3://workshop-lab-{attendee}-audit/{key}`\n")
+          PY
