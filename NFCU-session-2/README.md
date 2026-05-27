@@ -4,54 +4,155 @@ Runnable lab artifacts for the KodeKloud MLOps Deployment Workshop — a
 four-session live series on ML model deployment for DevOps engineers in
 regulated financial services.
 
-> This tree is self-contained under `NFCU-session-2/`, which acts as the
-> workshop repository root: `openspec/`, `shared/`, `.github/`,
-> `MLOps_Deployment_Workshop/`, and the repo-wide tooling all live here.
+> **Self-contained root.** This `NFCU-session-2/` directory acts as the workshop
+> repository root: `openspec/`, `shared/`, `.github/`, `MLOps_Deployment_Workshop/`,
+> and the repo-wide tooling (`pyproject.toml`, `Makefile`, `scripts/`) all live
+> here. Run every command below from this directory.
 
-## Available content
+## Sessions
 
-### MLOps_Deployment_Workshop/
+Session 2 (Champion-Challenger Shadow Deployments) is the first runnable lab.
 
-A four-session live workshop. Session 2 (Champion-Challenger Shadow
-Deployments) is the first runnable lab built in this repository.
-
-| Session | Topic | Date | Status |
+| # | Topic | Date | Status |
 |---|---|---|---|
 | 1 | Deployment Pipelines | June 2, 2026 | TBD (separate change proposal) |
-| 2 | Champion-Challenger Shadow Deployments | June 4, 2026 | In development |
+| 2 | **Champion-Challenger Shadow Deployments** | June 4, 2026 | Built |
 | 3 | Monitoring, Drift, and ML Runbooks | June 16, 2026 | TBD (separate change proposal) |
 | 4 | Kubernetes Model Serving | TBD | TBD (separate change proposal) |
 
-Sessions are sequential: Session N's outputs are inputs to Session N+1.
+Sessions are sequential — Session N's outputs are inputs to Session N+1.
+
+## Layout
+
+```
+NFCU-session-2/
+├── openspec/                                  # OpenSpec change proposal (source of truth)
+├── shared/terraform-modules/audit_trail/      # audit bucket module (reused by Session 3)
+├── shared/python/workshop_common/             # shared Python helpers
+├── .github/workflows/                         # session-2-{deploy,promote,rollback}.yml + ci.yml
+├── scripts/validate-local.sh                  # root validator (delegates per session)
+├── pyproject.toml  Makefile  .pre-commit-config.yaml
+└── MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/
+    ├── lambdas/{shadow-mirror,comparison,traffic-generator}/   # handlers + tests
+    ├── models/                                # train champion/challenger, package, verify
+    ├── terraform/                             # per-attendee infra (5 modules + endpoint)
+    ├── config/promotion-criteria.yaml         # the promotion gate thresholds
+    ├── scripts/                               # provision / teardown / verify / trigger
+    ├── tests/                                 # pytest (moto)
+    ├── docs/                                  # architecture, rollback runbook, why-fan-out
+    ├── LAB_GUIDE.md                           # attendee step-by-step
+    └── README.md                              # session quickstart + prod-vs-lab gaps
+```
+
+## Two independent toolchains
+
+| Toolchain | Used for | Setup |
+|---|---|---|
+| **Python venv** (`uv` + `.venv`) | Lambda code, model training, tests, lint/type-check | `make install` |
+| **Terraform** | The AWS infrastructure of the lab (Lambdas, API Gateway, SageMaker endpoint, S3, EventBridge, dashboard) | `terraform` CLI + AWS creds |
+
+These are separate. `make install` sets up **only** the Python side; it is **not**
+required to run Terraform. Terraform provisioning needs the `terraform` CLI and
+AWS credentials, nothing from the venv.
 
 ## Prerequisites
 
-- Python 3.12, [`uv`](https://docs.astral.sh/uv/)
-- Terraform 1.6+
-- An AWS sandbox account (provisioned by KodeKloud during the live session)
-- `tflint`, `tfsec`, `checkov`, `kics` for Terraform validation
+- **Python 3.12** and [`uv`](https://docs.astral.sh/uv/) — for the venv toolchain.
+- **Terraform 1.6+** and the **AWS CLI** (configured creds) — for provisioning.
+- `tflint`, `tfsec`, `checkov`, `kics` — only for the full Terraform scan in `validate-session-2.sh`.
+- An **AWS sandbox account** in `us-east-1` — only when you actually provision.
 
-## Quickstart
+## A. Local development & validation (no AWS)
 
 ```bash
-make install              # create the Python 3.12 venv and install dev deps
-make validate             # run the full local validation chain
-make validate-session-2   # Session 2 checks only
+make install              # create .venv (Python 3.12) and install dev deps
+make validate             # full local chain: every session validator + cross-cutting checks
+make validate-session-2   # Session 2 only (terraform fmt/validate, tflint/tfsec/checkov/kics,
+                          #   ruff, mypy, pytest, model-trainer dry-runs)
+make test                 # pytest with coverage
+openspec validate add-session-2-shadow-deployment-lab --strict
 ```
 
-Attendees: head to
-[`MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/`](MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/)
-and follow `LAB_GUIDE.md`.
+Both `make validate` and `make validate-session-2` exit 0 on a clean checkout.
+
+### Train and package the models (Python venv)
+
+```bash
+make train-models-session-2     # writes model-v1.0.0.joblib and model-v1.0.1.joblib
+.venv/bin/python MLOps_Deployment_Workshop/Session_2_Shadow_Deployment/models/verify_agreement.py
+make package-models-session-2   # writes model-v1.0.{0,1}.tar.gz (SageMaker layout)
+```
+
+`verify_agreement.py` must report a champion/challenger agreement rate in the
+**90–94%** band (currently ~0.928). The model artifacts and the UCI Adult cache
+are git-ignored and regenerated by these commands.
+
+## B. Provisioning the lab on AWS (Terraform)
+
+> Provisioning creates billable AWS resources. None are created by the steps in
+> section A.
+
+1. Upload the packaged challenger artifact to S3 and note its URI.
+2. Provision one attendee (runs `terraform init && apply`):
+
+   ```bash
+   cd MLOps_Deployment_Workshop/Session_2_Shadow_Deployment
+   scripts/provision-attendee.sh <attendee-id>
+   # prints the API Gateway URL and the CloudWatch dashboard URL
+   ```
+
+   Required Terraform variables: `attendee_id`, `model_v1_0_1_artifact_s3_uri`,
+   and (defaulted) `aws_region`, `champion_endpoint_name`, `sagemaker_image_uri`.
+
+3. Drive shadow traffic, then evaluate/promote:
+
+   ```bash
+   scripts/trigger-traffic.sh <attendee-id> <duration_minutes> <rate>
+   scripts/verify-endpoints.sh <attendee-id>
+   ```
+
+4. Tear down (preserves only the audit bucket):
+
+   ```bash
+   scripts/teardown-attendee.sh <attendee-id>
+   ```
+
+### What each attendee gets
+
+A SageMaker challenger endpoint `workshop-lab-<id>-challenger`; three Lambdas
+(`shadow-mirror/comparison/traffic-generator-<id>`); S3 buckets
+`workshop-lab-<id>-{shadow-logs,comparison-results,audit}`; a CloudWatch
+dashboard `workshop-lab-<id>-shadow`; a 5-minute EventBridge schedule. Every
+resource is tagged `Workshop=Session2`, `Attendee=<id>`,
+`CostCenter=KodeKloud-NFCU`, `AutoTeardown=2026-06-16`.
+
+## GitHub Actions workflows
+
+`.github/workflows/` holds `session-2-deploy-challenger`, `-promote-challenger`,
+`-rollback`, and `ci`. They need a repo variable **`AWS_OIDC_ROLE_ARN`** and a
+**`promotion`** environment (whose required reviewer is the `workshop-approver-bot`
+GitHub App — see `docs/architecture.md`).
+
+> **They will not fire from this location.** GitHub only runs workflows from
+> `.github/workflows/` at the *true* repository root. Kept here for containment;
+> move (or symlink) them to the repo root when you want them live.
+
+## Promotion gate
+
+The promote workflow reads the latest comparison result and runs
+`lambdas/comparison/criteria.py` against `config/promotion-criteria.yaml` (the
+same evaluator the comparison Lambda uses). On pass + `dry_run=false` it swaps the
+shadow-mirror Lambda's `CHAMPION_ENDPOINT_ARN`/`CHALLENGER_ENDPOINT_ARN` and
+writes an audit entry; rollback reverses it. Both audit entries are preserved
+through teardown.
 
 ## Governance
 
-Changes are managed with [OpenSpec](https://github.com/Fission-AI/OpenSpec).
-The current change proposal lives at
-`openspec/changes/add-session-2-shadow-deployment-lab/`. Validate with:
-
-```bash
-openspec validate add-session-2-shadow-deployment-lab --strict
-```
+Managed with [OpenSpec](https://github.com/Fission-AI/OpenSpec). The change
+proposal lives at `openspec/changes/add-session-2-shadow-deployment-lab/`
+(`proposal.md`, `design.md`, `tasks.md`, and five capability specs under
+`specs/`). See `PROJECT_STATE.md` for build status and the items deferred to a
+live AWS run.
 
 ## License
 
