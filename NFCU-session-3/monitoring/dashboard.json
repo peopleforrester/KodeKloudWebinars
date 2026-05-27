@@ -1,0 +1,114 @@
+{
+  "start": "-PT3H",
+  "periodOverride": "auto",
+  "widgets": [
+    {
+      "type": "text",
+      "x": 0, "y": 0, "width": 24, "height": 1,
+      "properties": {
+        "markdown": "## workshop-lab-{attendee_id} — Model Health    **Top row: infrastructure layer.**  **Bottom row: model layer.** Infra can be green while the model is silently wrong — watch both."
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0, "y": 1, "width": 8, "height": 6,
+      "properties": {
+        "title": "Invocations",
+        "region": "us-east-1",
+        "stat": "Sum",
+        "period": 60,
+        "view": "timeSeries",
+        "metrics": [
+          ["AWS/SageMaker", "Invocations", "EndpointName", "workshop-lab-{attendee_id}-production", "VariantName", "AllTraffic"]
+        ]
+      }
+    },
+    {
+      "type": "metric",
+      "x": 8, "y": 1, "width": 8, "height": 6,
+      "properties": {
+        "title": "Model Latency (p50 / p95)",
+        "region": "us-east-1",
+        "period": 60,
+        "view": "timeSeries",
+        "metrics": [
+          ["AWS/SageMaker", "ModelLatency", "EndpointName", "workshop-lab-{attendee_id}-production", "VariantName", "AllTraffic", {"stat": "p50", "label": "p50"}],
+          ["...", {"stat": "p95", "label": "p95"}]
+        ],
+        "annotations": {
+          "horizontal": [{"label": "Latency-P95 alarm (500ms)", "value": 500}]
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "x": 16, "y": 1, "width": 8, "height": 6,
+      "properties": {
+        "title": "Errors (4XX + 5XX)",
+        "region": "us-east-1",
+        "stat": "Sum",
+        "period": 60,
+        "view": "timeSeries",
+        "metrics": [
+          ["AWS/SageMaker", "Invocation4XXErrors", "EndpointName", "workshop-lab-{attendee_id}-production", "VariantName", "AllTraffic", {"label": "4XX"}],
+          ["AWS/SageMaker", "Invocation5XXErrors", "EndpointName", "workshop-lab-{attendee_id}-production", "VariantName", "AllTraffic", {"label": "5XX"}]
+        ]
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0, "y": 7, "width": 12, "height": 7,
+      "properties": {
+        "title": "Per-feature PSI (alarm at 0.25)",
+        "region": "us-east-1",
+        "stat": "Maximum",
+        "period": 120,
+        "view": "timeSeries",
+        "metrics": [
+          ["NFCU/Session3", "DriftPSI", "AttendeeId", "{attendee_id}", "Feature", "age", {"label": "age"}],
+          ["...", "...", "...", "...", "...", "workclass", {"label": "workclass"}],
+          ["...", "...", "...", "...", "...", "education_num", {"label": "education_num"}],
+          ["...", "...", "...", "...", "...", "marital_status", {"label": "marital_status"}],
+          ["...", "...", "...", "...", "...", "occupation", {"label": "occupation"}],
+          ["...", "...", "...", "...", "...", "race", {"label": "race"}],
+          ["...", "...", "...", "...", "...", "sex", {"label": "sex"}],
+          ["...", "...", "...", "...", "...", "hours_per_week", {"label": "hours_per_week"}]
+        ],
+        "annotations": {
+          "horizontal": [{"label": "PSI 0.25 (significant drift)", "value": 0.25}]
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12, "y": 7, "width": 6, "height": 7,
+      "properties": {
+        "title": "Prediction distribution per class",
+        "region": "us-east-1",
+        "stat": "Sum",
+        "period": 300,
+        "view": "timeSeries",
+        "stacked": true,
+        "metrics": [
+          ["NFCU/Session3", "PredictionClassCount", "AttendeeId", "{attendee_id}", "Class", "<=50K", {"label": "<=50K"}],
+          ["...", "...", "...", "...", "...", ">50K", {"label": ">50K"}]
+        ]
+      }
+    },
+    {
+      "type": "metric",
+      "x": 18, "y": 7, "width": 6, "height": 7,
+      "properties": {
+        "title": "Estimated AUC + agreement rate",
+        "region": "us-east-1",
+        "stat": "Average",
+        "period": 300,
+        "view": "timeSeries",
+        "metrics": [
+          ["NFCU/Session3", "EstimatedAUC", "AttendeeId", "{attendee_id}", {"label": "NannyML est. AUC"}],
+          ["NFCU/Session3", "AgreementRate", "AttendeeId", "{attendee_id}", {"label": "agreement rate"}]
+        ]
+      }
+    }
+  ]
+}

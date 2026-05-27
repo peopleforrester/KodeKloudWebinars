@@ -227,10 +227,10 @@ resource "aws_lambda_function" "evidently_runner" {
   memory_size   = 1024
   environment {
     variables = {
-      ATTENDEE_ID         = var.attendee_id
-      BASELINE_BUCKET     = local.baseline_bucket
+      ATTENDEE_ID          = var.attendee_id
+      BASELINE_BUCKET      = local.baseline_bucket
       DRIFT_REPORTS_BUCKET = local.drift_reports_buck
-      SHADOW_LOGS_BUCKET  = local.shadow_logs_bucket
+      SHADOW_LOGS_BUCKET   = local.shadow_logs_bucket
     }
   }
   tags = local.common_tags
