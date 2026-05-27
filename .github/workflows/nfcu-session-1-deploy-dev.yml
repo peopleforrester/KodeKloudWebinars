@@ -1,0 +1,131 @@
+# ABOUTME: Dev deploy pipeline for NFCU Session 1 — validate, optionally build/scan/sign
+# ABOUTME: the image, then terraform apply to the dev environment. OIDC only, no static keys.
+---
+name: NFCU Session 1 - Deploy Dev
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'NFCU-session-1/**'
+      - '.github/workflows/nfcu-session-1-*.yml'
+
+# OIDC token to assume the AWS role; read-only repo contents. No broader scope.
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  IMAGE_REPO: nfcu-session-1
+  # The container build/scan/sign stage is OFF by default. LAB_GUIDE step 2 instructs
+  # you to flip this to "true" (here, at the workflow level) once you understand the
+  # validation gate, so the full build/scan/sign path runs.
+  ENABLE_CONTAINER_STAGE: "false"
+  TF_ENV_DIR: NFCU-session-1/terraform/environments/dev
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      model_version: ${{ steps.mv.outputs.model_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Python dependencies
+        run: pip install -r NFCU-session-1/requirements.txt
+      - name: Resolve model version
+        id: mv
+        # Prefer a local terraform.tfvars when present (the Lab 1 failure path force-adds
+        # one with model_version = "latest"); otherwise use the demo default 1.0.0.
+        run: |
+          tfvars="${TF_ENV_DIR}/terraform.tfvars"
+          if [ -f "${tfvars}" ]; then
+            value=$(grep -E '^[[:space:]]*model_version[[:space:]]*=' "${tfvars}" \
+              | head -1 | sed -E 's/.*=[[:space:]]*"?([^"#]*)"?.*/\1/' | tr -d '[:space:]')
+          else
+            value="1.0.0"
+          fi
+          echo "model_version=${value}" >> "${GITHUB_OUTPUT}"
+          echo "Resolved model_version=${value}"
+      - name: Validate model artifact
+        # validate.py prints a single VALIDATION FAILED line and exits non-zero, so the
+        # cause (e.g. a mutable "latest" reference, exit 2) is the visible reason on red.
+        run: |
+          python NFCU-session-1/pipeline/validate.py \
+            --artifact "${ARTIFACT_URI}" \
+            --model-version "${{ steps.mv.outputs.model_version }}"
+        env:
+          ARTIFACT_URI: ${{ vars.ARTIFACT_URI }}
+
+  containerize:
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      image_digest: ${{ steps.build.outputs.image_digest }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials (OIDC)
+        if: ${{ env.ENABLE_CONTAINER_STAGE == 'true' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Log in to Amazon ECR
+        if: ${{ env.ENABLE_CONTAINER_STAGE == 'true' }}
+        uses: aws-actions/amazon-ecr-login@v2
+      # Trivy and Cosign installers are third-party actions: pinned by full 40-char
+      # commit SHA, never by tag (see docs/security-pinning.md, March 2026 incident).
+      - name: Install Trivy
+        if: ${{ env.ENABLE_CONTAINER_STAGE == 'true' }}
+        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514  # v0.2.6
+      - name: Install Cosign
+        if: ${{ env.ENABLE_CONTAINER_STAGE == 'true' }}
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac  # v3
+      - name: Fetch model artifact
+        if: ${{ env.ENABLE_CONTAINER_STAGE == 'true' }}
+        working-directory: NFCU-session-1/pipeline
+        run: aws s3 cp "${{ vars.MODEL_DATA_URL }}" "model-v${{ needs.validate.outputs.model_version }}.tar.gz"
+      - name: Build, scan, sign, and push image
+        id: build
+        if: ${{ env.ENABLE_CONTAINER_STAGE == 'true' }}
+        working-directory: NFCU-session-1/pipeline
+        run: bash build-container.sh
+        env:
+          ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+          IMAGE_REPO: ${{ env.IMAGE_REPO }}
+          IMAGE_TAG: "v${{ needs.validate.outputs.model_version }}"
+          KMS_KEY_ID: ${{ vars.KMS_KEY_ID }}
+          MODEL_ARTIFACT: "model-v${{ needs.validate.outputs.model_version }}.tar.gz"
+
+  deploy-dev:
+    needs: [validate, containerize]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd  # v3
+      - name: Terraform apply (dev)
+        working-directory: ${{ env.TF_ENV_DIR }}
+        # Use the freshly built+signed digest when the container stage ran; otherwise
+        # deploy the pre-existing signed image referenced by CONTAINER_IMAGE_URI.
+        run: |
+          digest="${{ needs.containerize.outputs.image_digest }}"
+          if [ -n "${digest}" ]; then
+            image_uri="${{ vars.ECR_REGISTRY }}/${IMAGE_REPO}@${digest}"
+          else
+            image_uri="${{ vars.CONTAINER_IMAGE_URI }}"
+          fi
+          terraform init -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
+          terraform apply -auto-approve \
+            -var="model_version=${{ needs.validate.outputs.model_version }}" \
+            -var="container_image_uri=${image_uri}" \
+            -var="model_data_url=${{ vars.MODEL_DATA_URL }}" \
+            -var="execution_role_arn=${{ vars.SAGEMAKER_EXECUTION_ROLE_ARN }}" \
+            -var="kms_key_arn=${{ vars.KMS_KEY_ARN }}"

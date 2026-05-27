@@ -1,0 +1,15 @@
+# MANUAL APPLY ONLY. Do not run from CI.
+# This Terraform provisions the demo sandbox; the workshop pipeline workflows assume these resources exist.
+# ABOUTME: Example sandbox tfvars. Copy to terraform.tfvars and edit for your fork.
+
+# Attendees replicating at home: set these to YOUR fork's owner and repo name so the
+# workflow role's OIDC trust matches your repository.
+github_org  = "peopleforrester"
+github_repo = "KodeKloudWebinars"
+aws_region  = "us-east-1"
+
+# Optional overrides.
+# name                 = "nfcu-session-1"
+# vpc_cidr             = "10.0.0.0/16"
+# private_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+# availability_zones   = ["us-east-1a", "us-east-1b"]

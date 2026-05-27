@@ -1,0 +1,87 @@
+# ABOUTME: Staging deploy pipeline for NFCU Session 1 — triggered when a promote-to-staging
+# ABOUTME: PR merges to main; verifies the existing signed image (no rebuild) then applies.
+---
+name: NFCU Session 1 - Deploy Staging
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+    paths:
+      - 'NFCU-session-1/**'
+      - '.github/workflows/nfcu-session-1-*.yml'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  IMAGE_REPO: nfcu-session-1
+  MODEL_VERSION: "1.0.0"
+  TF_ENV_DIR: NFCU-session-1/terraform/environments/staging
+
+jobs:
+  validate:
+    # Only when a promote-to-staging PR actually merged (not merely closed).
+    if: ${{ github.event.pull_request.merged == true && github.head_ref == 'promote-to-staging' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Python dependencies
+        run: pip install -r NFCU-session-1/requirements.txt
+      - name: Validate model artifact
+        run: |
+          python NFCU-session-1/pipeline/validate.py \
+            --artifact "${ARTIFACT_URI}" \
+            --model-version "${MODEL_VERSION}"
+        env:
+          ARTIFACT_URI: ${{ vars.ARTIFACT_URI }}
+
+  verify-container:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac  # v3
+      - name: Verify image signature
+        # Verify the digest produced by the dev build. Do NOT rebuild — staging promotes
+        # the exact bytes that were scanned and signed for dev.
+        working-directory: NFCU-session-1/pipeline
+        run: bash verify-container.sh
+        env:
+          ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+          IMAGE_REPO: ${{ env.IMAGE_REPO }}
+          KMS_KEY_ID: ${{ vars.KMS_KEY_ID }}
+          IMAGE_DIGEST: ${{ vars.IMAGE_DIGEST }}
+
+  deploy-staging:
+    needs: verify-container
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd  # v3
+      - name: Terraform apply (staging)
+        working-directory: ${{ env.TF_ENV_DIR }}
+        run: |
+          terraform init -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
+          terraform apply -auto-approve \
+            -var="model_version=${MODEL_VERSION}" \
+            -var="container_image_uri=${{ vars.ECR_REGISTRY }}/${IMAGE_REPO}@${{ vars.IMAGE_DIGEST }}" \
+            -var="model_data_url=${{ vars.MODEL_DATA_URL }}" \
+            -var="execution_role_arn=${{ vars.SAGEMAKER_EXECUTION_ROLE_ARN }}" \
+            -var="kms_key_arn=${{ vars.KMS_KEY_ARN }}"

@@ -1,0 +1,13 @@
+# ABOUTME: yamllint configuration for the repo. Relaxes line-length to a warning (GitHub
+# ABOUTME: Actions expressions run long) and allows `on:` as a workflow key.
+extends: default
+
+rules:
+  # GitHub Actions `${{ ... }}` expressions and pinned-SHA comments routinely exceed
+  # 80 columns; keep the signal as a non-blocking warning rather than an error.
+  line-length:
+    max: 120
+    level: warning
+  # `on:` is a required GitHub Actions key, not the boolean it looks like.
+  truthy:
+    check-keys: false

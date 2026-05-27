@@ -15,3 +15,17 @@ Desktop.ini
 # Environment
 .env
 .env.*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfvars
+!*.tfvars.example

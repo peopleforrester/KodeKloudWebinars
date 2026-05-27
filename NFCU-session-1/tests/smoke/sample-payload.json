@@ -1,0 +1,10 @@
+{
+  "age": 39,
+  "workclass": "Private",
+  "education": "Bachelors",
+  "marital_status": "Never-married",
+  "occupation": "Prof-specialty",
+  "race": "White",
+  "sex": "Male",
+  "hours_per_week": 40
+}
