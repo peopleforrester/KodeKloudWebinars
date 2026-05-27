@@ -1,0 +1,24 @@
+# Copy to terraform.tfvars and adjust. terraform.tfvars is gitignored.
+#
+# COST ANCHOR: with these defaults (2x m5.xlarge, single NAT gateway, one NLB),
+# expect roughly $40-$70 for an 8-hour demo + rehearsal window. The biggest
+# line items are the EKS control plane ($0.10/hr), node hours, the NAT gateway,
+# and the NLB. See runbook/speaker-aws-spend.md for the full breakdown, and
+# ALWAYS run `bash down.sh` (or `make eks-down`) when you are finished.
+
+region             = "us-east-1"
+cluster_name       = "nfcu-session-4"
+kubernetes_version = "1.34"
+
+node_instance_type = "m5.xlarge"
+node_desired_size  = 2
+node_min_size      = 2
+node_max_size      = 5
+
+# Leave empty to auto-derive a globally-unique name: "<cluster_name>-models-<account_id>".
+# Set explicitly only if you need a specific bucket name.
+model_artifacts_bucket_name = ""
+
+# ServiceAccount name the KServe storage initializer uses (annotated with the IRSA role
+# in every attendee namespace). Change only if your manifests use a different SA name.
+kserve_service_account_name = "kserve-sa"

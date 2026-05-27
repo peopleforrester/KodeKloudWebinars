@@ -13,15 +13,15 @@ Checkboxes are updated live as the run progresses. See `../../../RUN_CONFIG.md` 
 
 ## 2. EKS provisioning (nfcu-session-4-eks-cluster)
 
-- [ ] 2.1 `cluster/eks/README.md`
-- [ ] 2.2 `cluster/eks/terraform/versions.tf`
-- [ ] 2.3 `cluster/eks/terraform/variables.tf`
-- [ ] 2.4 `cluster/eks/terraform/main.tf`
-- [ ] 2.5 `cluster/eks/terraform/outputs.tf`
-- [ ] 2.6 `cluster/eks/terraform/terraform.tfvars.example`
-- [ ] 2.7 `cluster/eks/up.sh`
-- [ ] 2.8 `cluster/eks/down.sh`
-- [ ] 2.9 `terraform validate` passes
+- [x] 2.1 `cluster/eks/README.md`
+- [x] 2.2 `cluster/eks/terraform/versions.tf`
+- [x] 2.3 `cluster/eks/terraform/variables.tf`
+- [x] 2.4 `cluster/eks/terraform/main.tf`
+- [x] 2.5 `cluster/eks/terraform/outputs.tf`
+- [x] 2.6 `cluster/eks/terraform/terraform.tfvars.example`
+- [x] 2.7 `cluster/eks/up.sh`
+- [x] 2.8 `cluster/eks/down.sh`
+- [x] 2.9 `terraform validate` passes (against real v20 EKS / v5 IAM / v5 VPC modules)
 
 ## 3. Cluster add-ons (nfcu-session-4-cluster-addons)
 
