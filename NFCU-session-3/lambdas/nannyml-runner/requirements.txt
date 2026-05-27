@@ -1,0 +1,9 @@
+# nannyml-runner (container image) dependencies.
+#
+# Pin RE-VERIFY ON PyPI no earlier than June 9, 2026 (see PIN_VERIFICATION.md).
+# Lock the exact version once verified; confirm the CBPE constructor signature
+# matches handler.py (y_pred_proba / y_pred / y_true / problem_type / metrics).
+nannyml>=0.12,<0.14
+pandas>=2.2
+pyarrow>=15.0
+boto3>=1.34
