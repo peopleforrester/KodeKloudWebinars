@@ -43,7 +43,7 @@ the port mapping above.
 
 ## What this cannot show
 
-The EKS-only pieces: the AWS Load Balancer Controller, IRSA-based S3 model loading, and
+The EKS-only pieces: the AWS Load Balancer Controller, Pod Identity-based S3 model loading, and
 the Cluster Autoscaler scaling real EC2 nodes. Those are demonstrated on the EKS path
 (`../eks/`). Locally, model artifacts load from a PVC instead of S3 (see the storage
 options comment in `manifests/lab1-xgboost-inferenceservice.yaml`).

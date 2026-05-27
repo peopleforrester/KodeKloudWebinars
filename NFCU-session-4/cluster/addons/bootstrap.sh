@@ -75,14 +75,14 @@ kubectl apply -f "$VALUES/knative-serving.yaml"
 if [[ "$ENVIRONMENT" == "eks" ]]; then
   log "[3] AWS Load Balancer Controller $ALB_CHART_VERSION (EKS)"
   CLUSTER_NAME="$(terraform -chdir="$TF_DIR" output -raw cluster_name 2>/dev/null || echo "nfcu-session-4")"
-  ALB_ROLE_ARN="$(terraform -chdir="$TF_DIR" output -raw alb_controller_role_arn 2>/dev/null || true)"
-  [[ -z "$ALB_ROLE_ARN" ]] && die "aws-load-balancer-controller (could not read IRSA role ARN from terraform output)"
+  # No role-arn annotation needed: the EKS Pod Identity association created by Terraform
+  # binds the kube-system:aws-load-balancer-controller ServiceAccount to its role. The
+  # eks-pod-identity-agent (installed as a cluster addon) injects credentials at runtime.
   helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
     --namespace kube-system \
     --version "$ALB_CHART_VERSION" \
     -f "$VALUES/aws-load-balancer-controller.yaml" \
     --set "clusterName=${CLUSTER_NAME}" \
-    --set "serviceAccount.annotations.eks\.amazonaws\.com/role-arn=${ALB_ROLE_ARN}" \
     --wait --timeout 5m || die "aws-load-balancer-controller"
   wait_ns kube-system "aws-load-balancer-controller"
 else

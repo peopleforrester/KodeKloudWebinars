@@ -71,5 +71,5 @@ the cold start you'll load-test in Lab 2).
 ## What just happened
 
 You declared a model, not a deployment. KServe pulled the artifact (via the storage
-initializer using the `kserve-sa` IRSA role on EKS), wrapped it in a server, put it behind
+initializer using the `kserve-sa` Pod Identity association on EKS), wrapped it in a server, put it behind
 Knative, and gave it a URL — with scale-to-zero for free. Lab 2 shows how it scales *up*.

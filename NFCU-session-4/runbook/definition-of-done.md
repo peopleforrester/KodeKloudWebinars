@@ -18,7 +18,7 @@ and initialing in the PR that flips it.
 - [ ] Lab platform confirms it can stamp 30 namespaces from `cluster/lab-overlays/`.
 - [ ] ResourceQuota (4 vCPU / 8 Gi / 10 pods) verified on a stamped sample namespace.
 - [ ] NetworkPolicy verified: attendee-A pod cannot reach attendee-B service; Knative ingress still works.
-- [ ] `kserve-sa` ServiceAccount present in each namespace with the IRSA role annotation (EKS).
+- [ ] `kserve-sa` ServiceAccount present in each namespace bound via a Pod Identity association (EKS).
 - [ ] Storage initializer reads a model from S3 in a sample namespace with no static keys.
 
 ## Gate 3 — Pre-Session Validation (by 2026-06-13)

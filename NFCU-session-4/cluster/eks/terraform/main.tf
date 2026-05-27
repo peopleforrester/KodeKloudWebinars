@@ -1,5 +1,5 @@
-# ABOUTME: Speaker-owned EKS demo cluster for NFCU Session 4 — VPC, EKS (Knative-ready),
-# ABOUTME: an S3 bucket for model artifacts, and IRSA roles for ALB, autoscaler, and KServe.
+# ABOUTME: Speaker-owned EKS demo cluster for NFCU Session 4 — VPC, EKS v21, an S3 bucket
+# ABOUTME: for model artifacts, and EKS Pod Identity roles for ALB, autoscaler, and KServe.
 
 data "aws_caller_identity" "current" {}
 
@@ -54,33 +54,30 @@ module "vpc" {
 }
 
 ################################################################################
-# EKS cluster
+# EKS cluster (module v21 — note the renamed inputs vs v20)
 ################################################################################
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.0"
+  version = "~> 21.0"
 
-  cluster_name    = local.name
-  cluster_version = var.kubernetes_version
+  name               = local.name
+  kubernetes_version = var.kubernetes_version
 
   # Public endpoint so the speaker reaches the API from a laptop on demo day.
-  cluster_endpoint_public_access           = true
+  endpoint_public_access                   = true
   enable_cluster_creator_admin_permissions = true
-
-  # IRSA (OIDC provider) — required for the storage-initializer / ALB / autoscaler roles.
-  # NOTE: native enable_irsa was removed in EKS module v21 (Pod Identity replaces it).
-  # If you upgrade past v20, migrate these roles to Pod Identity associations.
-  enable_irsa = true
 
   vpc_id                   = module.vpc.vpc_id
   subnet_ids               = module.vpc.private_subnets
   control_plane_subnet_ids = module.vpc.private_subnets
 
-  cluster_addons = {
-    coredns    = { most_recent = true }
-    kube-proxy = { most_recent = true }
-    vpc-cni    = { most_recent = true }
+  addons = {
+    coredns    = {}
+    kube-proxy = {}
+    vpc-cni    = {}
+    # Required for EKS Pod Identity — injects credentials into associated pods.
+    eks-pod-identity-agent = {}
   }
 
   eks_managed_node_groups = {
@@ -144,7 +141,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "model_artifacts" 
 }
 
 ################################################################################
-# IRSA — read-only S3 policy for the KServe storage initializer
+# Read-only S3 policy for the KServe storage initializer
 ################################################################################
 
 data "aws_iam_policy_document" "kserve_s3_read" {
@@ -167,20 +164,28 @@ resource "aws_iam_policy" "kserve_s3_read" {
   tags        = local.tags
 }
 
-module "irsa_kserve_s3" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.0"
+################################################################################
+# Pod Identity — KServe storage initializer (reads models from S3)
+#
+# Unlike IRSA, Pod Identity associations are per (cluster, namespace, service account) —
+# there is no namespace wildcard. We bind the demo namespace here; the lab platform creates
+# one aws_eks_pod_identity_association per attendee namespace using this same role ARN
+# (see cluster/lab-overlays/README.md).
+################################################################################
 
-  role_name        = "${local.name}-kserve-s3-reader"
-  role_policy_arns = { s3 = aws_iam_policy.kserve_s3_read.arn }
+module "pod_identity_kserve_s3" {
+  source  = "terraform-aws-modules/eks-pod-identity/aws"
+  version = "~> 2.0"
 
-  # Allow the storage-initializer SA in ANY namespace (per-attendee namespaces).
-  assume_role_condition_test = "StringLike"
+  name = "${local.name}-kserve-s3-reader"
 
-  oidc_providers = {
-    main = {
-      provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["*:${var.kserve_service_account_name}"]
+  additional_policy_arns = { s3 = aws_iam_policy.kserve_s3_read.arn }
+
+  associations = {
+    demo = {
+      cluster_name    = module.eks.cluster_name
+      namespace       = "default"
+      service_account = var.kserve_service_account_name
     }
   }
 
@@ -188,20 +193,21 @@ module "irsa_kserve_s3" {
 }
 
 ################################################################################
-# IRSA — AWS Load Balancer Controller
+# Pod Identity — AWS Load Balancer Controller
 ################################################################################
 
-module "irsa_alb_controller" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.0"
+module "pod_identity_alb_controller" {
+  source  = "terraform-aws-modules/eks-pod-identity/aws"
+  version = "~> 2.0"
 
-  role_name                              = "${local.name}-alb-controller"
-  attach_load_balancer_controller_policy = true
+  name                            = "${local.name}-alb-controller"
+  attach_aws_lb_controller_policy = true
 
-  oidc_providers = {
-    main = {
-      provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["kube-system:aws-load-balancer-controller"]
+  associations = {
+    this = {
+      cluster_name    = module.eks.cluster_name
+      namespace       = "kube-system"
+      service_account = "aws-load-balancer-controller"
     }
   }
 
@@ -209,21 +215,22 @@ module "irsa_alb_controller" {
 }
 
 ################################################################################
-# IRSA — Cluster Autoscaler
+# Pod Identity — Cluster Autoscaler
 ################################################################################
 
-module "irsa_cluster_autoscaler" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.0"
+module "pod_identity_cluster_autoscaler" {
+  source  = "terraform-aws-modules/eks-pod-identity/aws"
+  version = "~> 2.0"
 
-  role_name                        = "${local.name}-cluster-autoscaler"
+  name                             = "${local.name}-cluster-autoscaler"
   attach_cluster_autoscaler_policy = true
-  cluster_autoscaler_cluster_names = [local.name]
+  cluster_autoscaler_cluster_names = [module.eks.cluster_name]
 
-  oidc_providers = {
-    main = {
-      provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["kube-system:cluster-autoscaler"]
+  associations = {
+    this = {
+      cluster_name    = module.eks.cluster_name
+      namespace       = "kube-system"
+      service_account = "cluster-autoscaler"
     }
   }
 

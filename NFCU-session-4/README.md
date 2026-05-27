@@ -91,7 +91,8 @@ pinned in `cluster/addons/bootstrap.sh` and each `helm-values/*.yaml` header:
 | KServe | `v0.16.0` | | cert-manager | `v1.16.1` |
 | Knative Serving | `1.15.2` | | kube-prometheus-stack | chart `85.3.3` |
 | Kourier | `knative-v1.15.0` | | OpenCost | chart `2.5.21` |
-| EKS module | `~> 20.0` | | AWS LB Controller | chart `3.3.0` |
+| EKS module | `~> 21.0` (AWS provider v6) | | AWS LB Controller | chart `3.3.0` |
+| Kubernetes (EKS) | `1.35` (latest EKS offers) | | eks-pod-identity | `~> 2.0` |
 
 The KServe-coupled versions come from KServe 0.16.0's own `quick_install.sh`. The predictor
 pins `kserve 0.16`, `transformers 4.50`, `torch 2.5` (CPU), `fastapi 0.115` (Python 3.12+).
@@ -111,9 +112,10 @@ manifest structure (offline substitute for `kubectl dry-run`), `bash -n`, `py_co
 - **Knative deployment mode, not Standard** — the session's scale-to-zero, concurrency
   autoscaling, and `canaryTrafficPercent` all require it.
 - **Kourier, not Istio/Gateway API** — simplest Knative network layer; no service mesh.
-- **EKS module v20 + IRSA, not v21 + Pod Identity** — the design is IRSA-based (storage
-  initializer, ALB controller, autoscaler) and v21 removed native IRSA. Pod Identity is the
-  more modern choice and is tracked as a possible follow-up; see `cluster/eks/README.md`.
+- **EKS module v21 + Pod Identity** — auth uses EKS Pod Identity associations (the modern,
+  AWS-recommended approach) for the storage initializer, ALB controller, and autoscaler. No
+  OIDC provider, no ServiceAccount role-arn annotations. (The original spec called for IRSA;
+  this was migrated to Pod Identity — see `RUN_CONFIG.md`.)
 - **TinyLlama on CPU via a custom predictor** — KServe's HF runtime defaults to GPU vLLM;
   a custom CPU predictor keeps the image small and the schema matching the curl examples.
 - **Model artifacts generated, not committed** — `generate-xgboost-models.py` is seeded and

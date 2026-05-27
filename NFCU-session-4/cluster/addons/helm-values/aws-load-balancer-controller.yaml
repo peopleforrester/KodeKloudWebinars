@@ -1,5 +1,5 @@
 # ABOUTME: AWS Load Balancer Controller values (EKS only) — fronts Kourier with an NLB.
-# ABOUTME: Uses the IRSA role provisioned by cluster/eks/terraform (no static credentials).
+# ABOUTME: Auth via EKS Pod Identity (association in Terraform); no static credentials.
 #
 # chart:      aws-load-balancer-controller
 # chartVersion: 3.3.0
@@ -10,14 +10,15 @@
 # NOT installed on local kind — there is no AWS load balancer there. bootstrap.sh skips
 # this component unless invoked as `bootstrap.sh eks`.
 #
-# bootstrap.sh fills in clusterName and the IRSA role ARN (from `terraform output`) via
-# --set overrides, so this file holds only the static configuration.
+# bootstrap.sh injects only clusterName via --set. Credentials come from the Pod Identity
+# association (kube-system:aws-load-balancer-controller) created in cluster/eks/terraform —
+# no role-arn annotation needed (that was the IRSA pattern).
 
 # clusterName is injected by bootstrap.sh: --set clusterName=<cluster>
 serviceAccount:
   create: true
   name: aws-load-balancer-controller
-  # annotations.eks.amazonaws.com/role-arn is injected by bootstrap.sh from terraform output.
+  # No eks.amazonaws.com/role-arn annotation — the Pod Identity association handles binding.
 
 replicaCount: 1
 

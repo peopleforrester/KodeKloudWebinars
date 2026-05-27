@@ -27,21 +27,16 @@ output "model_artifacts_bucket_name" {
 }
 
 output "kserve_s3_role_arn" {
-  description = "IRSA role ARN for the KServe storage initializer. Annotate onto the storage-initializer ServiceAccount."
-  value       = module.irsa_kserve_s3.iam_role_arn
+  description = "Pod Identity role ARN for the KServe storage initializer. The lab platform creates one pod-identity association per attendee namespace using this role."
+  value       = module.pod_identity_kserve_s3.iam_role_arn
 }
 
 output "alb_controller_role_arn" {
-  description = "IRSA role ARN for the AWS Load Balancer Controller ServiceAccount."
-  value       = module.irsa_alb_controller.iam_role_arn
+  description = "Pod Identity role ARN for the AWS Load Balancer Controller (kube-system:aws-load-balancer-controller)."
+  value       = module.pod_identity_alb_controller.iam_role_arn
 }
 
 output "cluster_autoscaler_role_arn" {
-  description = "IRSA role ARN for the Cluster Autoscaler ServiceAccount."
-  value       = module.irsa_cluster_autoscaler.iam_role_arn
-}
-
-output "oidc_provider_arn" {
-  description = "Cluster OIDC provider ARN (for additional IRSA roles)."
-  value       = module.eks.oidc_provider_arn
+  description = "Pod Identity role ARN for the Cluster Autoscaler (kube-system:cluster-autoscaler)."
+  value       = module.pod_identity_cluster_autoscaler.iam_role_arn
 }

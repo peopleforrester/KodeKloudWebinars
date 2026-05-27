@@ -23,6 +23,17 @@ The build does **not** create anything at the real `KodeKloudWebinars/` root and
 
 ## Spec-deviation log
 
+- **Auth model: IRSA → EKS Pod Identity (maintainer request, 2026-05-27).** The spec
+  specified IRSA throughout. Per maintainer direction, the EKS path was migrated to EKS Pod
+  Identity: EKS module `~> 20.0` → `~> 21.0`, the three `iam-role-for-service-accounts-eks`
+  modules → `terraform-aws-modules/eks-pod-identity` modules + `eks-pod-identity-agent`
+  addon, `enable_irsa`/OIDC dropped, AWS provider bumped to v6 (required by v21). Default
+  `kubernetes_version` 1.34 → **1.35** (the latest EKS offers as of May 2026; 1.36 is the
+  latest upstream GA but EKS does not support it yet). `terraform validate` passes.
+  Note: Pod Identity has no namespace wildcard, so the lab platform creates one
+  storage-initializer association per attendee namespace (was a single `*:kserve-sa` IRSA
+  trust).
+
 - **Task 1.3 (root README link):** skipped — scope constraint. The capability spec
   `nfcu-session-4-collateral` requirement "Root README links Session 4" is therefore
   recorded as *deferred to the maintainer* in the archived spec, not satisfied by this run.

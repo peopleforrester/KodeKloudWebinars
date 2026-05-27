@@ -13,7 +13,7 @@ stamp ~30 namespaces. We ship the base and one worked example; we do not provisi
 | `Namespace` | The attendee's isolated workspace |
 | `ResourceQuota` | Caps the namespace at **4 vCPU / 8 Gi / 10 pods** so no one starves the cluster |
 | `NetworkPolicy` | Blocks traffic from *other attendee* namespaces (see the nuance below) |
-| `ServiceAccount` (`kserve-sa`) | Runs the KServe storage initializer; annotated with the IRSA role on EKS |
+| `ServiceAccount` (`kserve-sa`) | Runs the KServe storage initializer; bound to the S3-reader role via an EKS Pod Identity association |
 
 ## Stamping per attendee
 
@@ -45,8 +45,17 @@ namespaces but explicitly allows `knative-serving`, `kourier-system`, `kube-syst
 `monitoring`. Attendee A still cannot reach attendee B — which is the isolation the session
 demonstrates.
 
-## IRSA annotation
+## Pod Identity (storage initializer auth on EKS)
 
-`base/serviceaccount.yaml` carries a placeholder `eks.amazonaws.com/role-arn`. On EKS,
-patch it with `terraform output -raw kserve_s3_role_arn` (or have the lab platform inject
-it). On local kind there is no IRSA and the annotation is ignored.
+`base/serviceaccount.yaml` is a plain `kserve-sa` ServiceAccount — **no annotation**. On
+EKS, auth is EKS Pod Identity, which binds outside the manifest. Because Pod Identity
+associations are per (namespace, service account) with no wildcard, the lab platform creates
+one association per attendee namespace when it stamps the namespace:
+
+```bash
+aws eks create-pod-identity-association --cluster-name <cluster> \
+  --namespace attendee-0001 --service-account kserve-sa \
+  --role-arn "$(terraform -chdir=../eks/terraform output -raw kserve_s3_role_arn)"
+```
+
+On local kind there is no Pod Identity; the SA is just a plain SA and models load from a PVC.

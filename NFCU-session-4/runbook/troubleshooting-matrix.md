@@ -6,7 +6,7 @@ known symptom in under 5 minutes. `$NS` is the affected namespace throughout.
 
 | # | Symptom | Likely cause | Remediation | Confirm |
 |---|---|---|---|---|
-| 1 | InferenceService stuck `READY=False`, predictor pod has an Init error | Storage initializer can't read `storageUri` | Check `kubectl logs <pod> -c storage-initializer -n $NS`; fix the `storageUri` or the IRSA role on `kserve-sa` | Pod leaves Init; `kubectl get isvc -n $NS` shows `READY=True` |
+| 1 | InferenceService stuck `READY=False`, predictor pod has an Init error | Storage initializer can't read `storageUri` | Check `kubectl logs <pod> -c storage-initializer -n $NS`; fix the `storageUri` or the Pod Identity association for `kserve-sa` | Pod leaves Init; `kubectl get isvc -n $NS` shows `READY=True` |
 | 2 | Predictor pod `Pending` | ResourceQuota exhausted or no node capacity | `kubectl describe pod <pod> -n $NS` (look for quota/insufficient cpu); free pods or wait for autoscaler | Pod moves to `Running` within ~5 min |
 | 3 | 503 on the first request after idle | Cold start (scale-to-zero) — pod spinning up | Retry after ~10s; for demos set `minReplicas: 1` to keep one warm | Second request returns 200 |
 | 4 | Pods never scale back to zero | Steady background traffic, or `minReplicas>0` | `kubectl get ksvc -n $NS`; stop stray clients; verify `minReplicas: 0` in the manifest | `kubectl get pods -n $NS` → 0 predictor pods after ~60s idle |

@@ -8,7 +8,7 @@ is the single source of add-on truth — if it drifts, the two paths diverge.
 
 ```bash
 bash bootstrap.sh local   # kind rehearsal
-bash bootstrap.sh eks     # live EKS demo (reads IRSA ARNs from terraform output)
+bash bootstrap.sh eks     # live EKS demo (reads Pod Identity role ARNs from terraform output)
 
 bash verify.sh            # gate before lab work — non-zero exit names the failing add-on
 ```

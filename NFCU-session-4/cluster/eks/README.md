@@ -58,15 +58,20 @@ aws eks list-clusters --region us-east-1
 | Resource | Purpose |
 |---|---|
 | VPC (`terraform-aws-modules/vpc`, 3 AZs, 1 NAT) | Network for the cluster |
-| EKS cluster (`terraform-aws-modules/eks` v20) | Control plane + managed node group |
+| EKS cluster (`terraform-aws-modules/eks` v21) | Control plane + managed node group + `eks-pod-identity-agent` addon |
 | S3 bucket (private, versioned, encrypted) | XGBoost model artifacts |
-| IRSA role: KServe storage initializer | Reads model artifacts from S3, no static keys |
-| IRSA role: AWS Load Balancer Controller | Provisions the NLB in front of Kourier |
-| IRSA role: Cluster Autoscaler | Scales the node group under load |
+| Pod Identity role: KServe storage initializer | Reads model artifacts from S3, no static keys |
+| Pod Identity role: AWS Load Balancer Controller | Provisions the NLB in front of Kourier |
+| Pod Identity role: Cluster Autoscaler | Scales the node group under load |
+
+Auth uses **EKS Pod Identity** (`terraform-aws-modules/eks-pod-identity`), not IRSA — no
+OIDC provider, no ServiceAccount role-arn annotations. The agent addon injects credentials
+into associated pods. Pod Identity associations are per (namespace, service account): the
+ALB controller and autoscaler bind fixed `kube-system` SAs; the KServe storage-initializer
+role is bound per attendee namespace (the lab platform creates one association each).
 
 ## Version note
 
-The EKS module is pinned to **v20**. Version 21 removed native IRSA support in favor of
-EKS Pod Identity; because the whole storage/ingress/autoscaling design here is IRSA-based,
-upgrading past v20 is a separate change (migrate the three roles to Pod Identity
-associations). See `versions.tf`.
+- **EKS module v21**, Kubernetes **1.35** (the latest EKS offers as of May 2026 — 1.36 is the
+  latest upstream GA but EKS lags; bump the `kubernetes_version` default once EKS adds it).
+- **AWS provider v6** is required by the v21 modules.

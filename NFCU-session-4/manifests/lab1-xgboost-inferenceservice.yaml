@@ -2,9 +2,9 @@
 # Demonstrates: scale-to-zero (minReplicas 0) and concurrency-based autoscaling.
 #
 # STORAGE OPTIONS — set storageUri to match your cluster:
-#   EKS (S3 + IRSA):  s3://<bucket>/model-v1.0.0
+#   EKS (S3 + Pod Identity):  s3://<bucket>/model-v1.0.0
 #                     where <bucket> = terraform output -raw model_artifacts_bucket_name
-#                     (the kserve-sa ServiceAccount carries the IRSA role that reads it)
+#                     (a Pod Identity association binds the kserve-sa SA to the S3-reader role)
 #   Local (kind):     pvc://model-store/model-v1.0.0
 #                     (load the model onto a PVC named model-store first)
 # The value below is a placeholder — substitute before applying. See

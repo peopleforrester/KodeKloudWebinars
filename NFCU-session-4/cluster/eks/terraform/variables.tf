@@ -14,9 +14,14 @@ variable "cluster_name" {
 }
 
 variable "kubernetes_version" {
-  description = "EKS control plane Kubernetes version (1.34, 1.35, or 1.36)."
+  description = <<-EOT
+    EKS control plane Kubernetes version. Default 1.35 — the latest version EKS offers as of
+    May 2026 (EKS lags upstream; 1.36 is the latest upstream GA but EKS does not support it
+    yet). Bump to "1.36" the moment EKS adds it. Verify availability in your region with:
+    aws eks describe-cluster-versions.
+  EOT
   type        = string
-  default     = "1.34"
+  default     = "1.35"
 }
 
 variable "node_instance_type" {
@@ -60,9 +65,10 @@ variable "vpc_cidr" {
 
 variable "kserve_service_account_name" {
   description = <<-EOT
-    ServiceAccount name the KServe storage initializer uses to read model artifacts from
-    S3 via IRSA. The trust policy allows this SA name in any namespace (per-attendee
-    namespaces), so the lab platform annotates the same SA name everywhere.
+    ServiceAccount name the KServe storage initializer uses to read model artifacts from S3
+    via EKS Pod Identity. Pod Identity associations are per namespace (no wildcard), so the
+    lab platform creates one association per attendee namespace binding this SA name to the
+    storage-initializer role.
   EOT
   type        = string
   default     = "kserve-sa"

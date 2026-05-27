@@ -26,7 +26,7 @@ Goals: `terraform apply` under **25 min**; add-ons + labs under **15 min**.
 
 | Step | Target | Actual (fill in) |
 |---|---|---|
-| terraform apply (VPC + EKS + IRSA + S3) | 15–25 min | |
+| terraform apply (VPC + EKS + Pod Identity + S3) | 15–25 min | |
 | Add-ons bootstrap + verify | 10–15 min | |
 | Models → S3, predictor → ECR | 5–10 min | |
 | Deploy labs 1–4 + wait Ready | 3–6 min | |

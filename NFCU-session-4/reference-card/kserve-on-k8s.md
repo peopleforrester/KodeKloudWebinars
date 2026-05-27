@@ -78,4 +78,4 @@ curl -X POST $INGRESS/v1/models/<name>:predict \
 ## When it breaks
 
 503 on first request → cold start, retry · stuck `READY=False` → storage initializer
-(check `storageUri` + IRSA) · pod Pending → quota/resources · no split → still one revision.
+(check `storageUri` + Pod Identity) · pod Pending → quota/resources · no split → still one revision.

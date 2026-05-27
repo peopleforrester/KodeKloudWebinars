@@ -69,4 +69,4 @@ cluster down when finished.
 That's almost always a cold start (scale-to-zero) or the storage initializer still pulling
 the artifact. Wait and retry. If it persists, your lab engineer has the
 [troubleshooting matrix](../runbook/troubleshooting-matrix.md) — common causes are a wrong
-`storageUri` or missing IRSA permissions on the bucket.
+`storageUri` or missing Pod Identity permissions on the bucket.
