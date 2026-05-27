@@ -34,7 +34,7 @@ Recovery tags (in the shared repo's object store): `nfcu-s4-phase0-scaffold`, `n
 - [x] Phase 2 — EKS Terraform module (cluster/eks) — terraform validate passes against real modules
 - [x] Phase 3 — Cluster add-ons bootstrap (cluster/addons) — bootstrap.sh, verify.sh, 7 version-pinned helm-values
 - [x] Phase 4 — Local kind cluster (cluster/local)
-- [ ] Phase 5 — Lab overlays (cluster/lab-overlays)
+- [x] Phase 5 — Lab overlays (cluster/lab-overlays)
 - [ ] Phase 6 — InferenceService manifests (manifests/)
 - [ ] Phase 7 — TinyLlama predictor image (predictors/tinyllama)
 - [ ] Phase 8 — Load test harness (tests/)

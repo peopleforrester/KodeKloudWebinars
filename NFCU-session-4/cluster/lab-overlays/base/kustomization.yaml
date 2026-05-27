@@ -1,0 +1,13 @@
+# Base for one attendee namespace. The `namespace:` value here is the placeholder name;
+# each overlay overrides it, which both renames the Namespace object and stamps the
+# namespace onto the quota, network policy, and service account.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: attendee
+
+resources:
+  - namespace.yaml
+  - resourcequota.yaml
+  - networkpolicy.yaml
+  - serviceaccount.yaml

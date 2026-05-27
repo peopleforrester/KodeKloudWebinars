@@ -1,0 +1,12 @@
+# Caps one attendee's namespace so no single attendee can starve the shared cluster.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: attendee-quota
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "4"
+    limits.memory: 8Gi
+    pods: "10"

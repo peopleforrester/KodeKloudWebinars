@@ -1,0 +1,9 @@
+# Placeholder namespace. The overlay's `namespace:` field renames this per attendee.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: attendee
+  labels:
+    nfcu-session-4/role: attendee
+    # The auto-injected kubernetes.io/metadata.name label is what the NetworkPolicy in
+    # peer namespaces uses to identify system vs attendee namespaces.

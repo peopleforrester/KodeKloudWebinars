@@ -47,13 +47,13 @@ Checkboxes are updated live as the run progresses. See `../../../RUN_CONFIG.md` 
 
 ## 5. Per-attendee overlays (nfcu-session-4-lab-overlays)
 
-- [ ] 5.1 `cluster/lab-overlays/README.md`
-- [ ] 5.2 `cluster/lab-overlays/base/kustomization.yaml`
-- [ ] 5.3 `cluster/lab-overlays/base/namespace.yaml`
-- [ ] 5.4 `cluster/lab-overlays/base/resourcequota.yaml`
-- [ ] 5.5 `cluster/lab-overlays/base/networkpolicy.yaml`
-- [ ] 5.6 `cluster/lab-overlays/base/serviceaccount.yaml`
-- [ ] 5.7 `cluster/lab-overlays/overlays/attendee-sample/kustomization.yaml`
+- [x] 5.1 `cluster/lab-overlays/README.md`
+- [x] 5.2 `cluster/lab-overlays/base/kustomization.yaml`
+- [x] 5.3 `cluster/lab-overlays/base/namespace.yaml`
+- [x] 5.4 `cluster/lab-overlays/base/resourcequota.yaml`
+- [x] 5.5 `cluster/lab-overlays/base/networkpolicy.yaml`
+- [x] 5.6 `cluster/lab-overlays/base/serviceaccount.yaml`
+- [x] 5.7 `cluster/lab-overlays/overlays/attendee-sample/kustomization.yaml`
 
 ## 6. Inference service manifests (nfcu-session-4-inferenceservice-manifests)
 
