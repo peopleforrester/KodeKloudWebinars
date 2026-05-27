@@ -1,0 +1,23 @@
+# ABOUTME: Dependency pins for the TinyLlama KServe predictor (CPU). torch is the CPU build.
+# ABOUTME: Versions chosen for KServe 0.16 compatibility; see README for the torch CPU index.
+[project]
+name = "tinyllama-kserve-predictor"
+version = "0.16.0"
+description = "Custom KServe predictor serving TinyLlama 1.1B on CPU for NFCU Session 4."
+requires-python = ">=3.12"
+
+dependencies = [
+    "kserve==0.16.*",
+    "transformers==4.50.*",
+    "torch==2.5.*",
+    "fastapi==0.115.*",
+    # transformers needs one of safetensors/accelerate for efficient CPU loading.
+    "accelerate==1.*",
+    "safetensors==0.4.*",
+]
+
+# torch CPU wheels come from the PyTorch CPU index, not PyPI. The Dockerfile passes
+# --extra-index-url https://download.pytorch.org/whl/cpu so the CPU build is selected
+# instead of the default CUDA build. See README.
+[tool.uv]
+# Placeholder for uv users; pip works equally well (see Dockerfile).

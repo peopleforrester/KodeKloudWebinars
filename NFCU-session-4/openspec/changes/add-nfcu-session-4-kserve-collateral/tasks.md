@@ -72,16 +72,16 @@ Checkboxes are updated live as the run progresses. See `../../../RUN_CONFIG.md` 
 
 ## 7. TinyLlama predictor container (nfcu-session-4-tinyllama-predictor-image)
 
-- [ ] 7.1 `predictors/tinyllama/README.md`
-- [ ] 7.2 `predictors/tinyllama/Dockerfile`
-- [ ] 7.3 `predictors/tinyllama/pyproject.toml`
-- [ ] 7.4 `predictors/tinyllama/server.py`
-- [ ] 7.5 `predictors/tinyllama/health.py`
-- [ ] 7.6 `predictors/tinyllama/distilgpt2-fallback.Dockerfile`
-- [ ] 7.7 `predictors/tinyllama/build.sh`
-- [ ] 7.8 `predictors/tinyllama/push-to-ecr.sh`
-- [ ] 7.9 `predictors/tinyllama/test-local.sh`
-- [ ] 7.10 `predictors/tinyllama/.dockerignore`
+- [x] 7.1 `predictors/tinyllama/README.md`
+- [x] 7.2 `predictors/tinyllama/Dockerfile`
+- [x] 7.3 `predictors/tinyllama/pyproject.toml`
+- [x] 7.4 `predictors/tinyllama/server.py`
+- [x] 7.5 `predictors/tinyllama/health.py`
+- [x] 7.6 `predictors/tinyllama/distilgpt2-fallback.Dockerfile`
+- [x] 7.7 `predictors/tinyllama/build.sh`
+- [x] 7.8 `predictors/tinyllama/push-to-ecr.sh`
+- [x] 7.9 `predictors/tinyllama/test-local.sh`
+- [x] 7.10 `predictors/tinyllama/.dockerignore`
 
 ## 8. Load test harness (nfcu-session-4-load-test-harness)
 

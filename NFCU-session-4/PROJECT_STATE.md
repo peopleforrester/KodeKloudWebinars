@@ -36,7 +36,7 @@ Recovery tags (in the shared repo's object store): `nfcu-s4-phase0-scaffold`, `n
 - [x] Phase 4 — Local kind cluster (cluster/local)
 - [x] Phase 5 — Lab overlays (cluster/lab-overlays)
 - [x] Phase 6 — InferenceService manifests (manifests/)
-- [ ] Phase 7 — TinyLlama predictor image (predictors/tinyllama)
+- [x] Phase 7 — TinyLlama predictor image (predictors/tinyllama)
 - [ ] Phase 8 — Load test harness (tests/)
 - [ ] Phase 9 — Attendee collateral (attendee-guide, reference-card)
 - [ ] Phase 10 — Operations runbook (runbook/)
