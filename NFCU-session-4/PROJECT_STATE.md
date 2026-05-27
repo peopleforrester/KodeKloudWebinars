@@ -6,9 +6,18 @@ Implement the Session 4 KServe ML-serving collateral per
 `OPENSPEC_CHANGE_session-4-kserve-serving.md`, **entirely under `NFCU-session-4/`**.
 Do not touch the repo root (see `RUN_CONFIG.md` for the path mapping and deviations).
 
+## Working location (IMPORTANT)
+
+All work is in an **isolated git worktree**: `/home/michael/repos/_archive/kk/kk-nfcu-session-4/`.
+The original clone `/home/michael/repos/_archive/kk/KodeKloudWebinars/` is shared by other
+concurrent sessions (sessions 1/2/3) and kept switching branches under us, so Session 4
+moved to its own worktree on 2026-05-27. Do NOT resume work in the shared clone.
+Recovery tags (in the shared repo's object store): `nfcu-s4-phase0-scaffold`, `nfcu-s4-phase2-eks`.
+
 ## Branch & verification
 
-- Branch: `nfcu-session-4-build` (cut from `main`). No commits to `main`. No push without go-ahead.
+- Branch: `nfcu-session-4-build` in the worktree above, cut from clean `main` (59a6ec7).
+  Session-4 commits only — no session-1/2/3 dirs. No commits to `main`. No push without go-ahead.
 - Verification method: **static / authoring only** in this environment. Tools present:
   terraform 1.15.4, kubectl v1.36.1, helm, kind 0.24.0, docker, python3, yamllint,
   markdownlint, jq. Missing: kustomize (`kubectl kustomize` used instead), hadolint, k6.
@@ -21,9 +30,9 @@ Do not touch the repo root (see `RUN_CONFIG.md` for the path mapping and deviati
 ## Phase checklist
 
 - [x] Phase 0 — Ingest: spec saved verbatim, RUN_CONFIG, nested openspec scaffolding (project.md, proposal/tasks/design, 9 spec deltas), PROJECT_STATE
-- [ ] Phase 1 — Repo scaffolding: README, .gitignore, Makefile (root README edit deferred)
+- [x] Phase 1 — Repo scaffolding: README, .gitignore, Makefile, validate harness (root README edit deferred)
 - [x] Phase 2 — EKS Terraform module (cluster/eks) — terraform validate passes against real modules
-- [ ] Phase 3 — Cluster add-ons bootstrap (cluster/addons)
+- [x] Phase 3 — Cluster add-ons bootstrap (cluster/addons) — bootstrap.sh, verify.sh, 7 version-pinned helm-values
 - [ ] Phase 4 — Local kind cluster (cluster/local)
 - [ ] Phase 5 — Lab overlays (cluster/lab-overlays)
 - [ ] Phase 6 — InferenceService manifests (manifests/)
@@ -36,14 +45,15 @@ Do not touch the repo root (see `RUN_CONFIG.md` for the path mapping and deviati
 
 ## Last completed step
 
-Phase 2 complete. EKS Terraform module written and `terraform validate`'d against the
-real terraform-aws-modules (EKS v20, IAM v5, VPC v5). Cross-platform provider lock committed.
+Phase 3 complete. Add-ons bootstrap (ordered, idempotent, fails-loud) + verify.sh +
+7 version-pinned helm-values. Versions verified against KServe 0.16.0's quick_install
+(cert-manager v1.16.1, Knative 1.15.2, Kourier knative-v1.15.0, KServe v0.16.0) and
+current charts (kube-prometheus-stack 85.3.3, OpenCost 2.5.21, ALB 3.3.0). validate clean.
 
 ## Next step
 
-Phase 3 — `cluster/addons/`: bootstrap.sh (ordered, idempotent), verify.sh, and
-version-pinned helm-values/*.yaml for cert-manager, Knative, Kourier, KServe,
-kube-prometheus-stack, OpenCost, and (EKS-only) the AWS Load Balancer Controller.
+Phase 4 — `cluster/local/`: kind-config.yaml (3 nodes, ports 80/443/31080), up.sh
+(create kind + bootstrap local), down.sh, README with 16 GB min laptop spec.
 
 ## Notes / decisions
 

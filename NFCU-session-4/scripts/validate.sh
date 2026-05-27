@@ -21,7 +21,7 @@ section "yamllint"
 if have yamllint; then
   # Exclude vendored terraform; .disabled reference manifests are not matched.
   mapfile -t YAML_FILES < <(find . -type f \( -name '*.yaml' -o -name '*.yml' \) \
-      -not -path './.terraform/*')
+      -not -path '*/.terraform/*' -not -path '*/.git/*')
   if [[ ${#YAML_FILES[@]} -eq 0 ]]; then
     echo "   (no yaml files yet)"
   elif yamllint -c .yamllint "${YAML_FILES[@]}"; then
@@ -90,7 +90,7 @@ fi
 section "bash -n (syntax)"
 while IFS= read -r f; do
   if bash -n "$f"; then :; else fail "bash -n $f"; fi
-done < <(find . -type f -name '*.sh' -not -path './.terraform/*')
+done < <(find . -type f -name '*.sh' -not -path '*/.terraform/*' -not -path '*/.git/*')
 echo "   ok"
 
 # --- Python -----------------------------------------------------------------
@@ -98,7 +98,7 @@ section "python compile"
 if have python3; then
   while IFS= read -r f; do
     if python3 -m py_compile "$f"; then :; else fail "py_compile $f"; fi
-  done < <(find . -type f -name '*.py')
+  done < <(find . -type f -name '*.py' -not -path '*/.terraform/*' -not -path '*/.git/*')
   echo "   ok"
 else
   skip python3

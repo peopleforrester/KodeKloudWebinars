@@ -25,17 +25,17 @@ Checkboxes are updated live as the run progresses. See `../../../RUN_CONFIG.md` 
 
 ## 3. Cluster add-ons (nfcu-session-4-cluster-addons)
 
-- [ ] 3.1 `cluster/addons/README.md`
-- [ ] 3.2 `cluster/addons/bootstrap.sh`
-- [ ] 3.3 `cluster/addons/helm-values/cert-manager.yaml`
-- [ ] 3.4 `cluster/addons/helm-values/knative-serving.yaml`
-- [ ] 3.5 `cluster/addons/helm-values/kourier.yaml`
-- [ ] 3.6 `cluster/addons/helm-values/kserve.yaml`
-- [ ] 3.7 `cluster/addons/helm-values/kube-prometheus-stack.yaml`
-- [ ] 3.8 `cluster/addons/helm-values/opencost.yaml`
-- [ ] 3.9 `cluster/addons/helm-values/aws-load-balancer-controller.yaml`
-- [ ] 3.10 Version-pinned headers on every helm values file
-- [ ] 3.11 `cluster/addons/verify.sh`
+- [x] 3.1 `cluster/addons/README.md`
+- [x] 3.2 `cluster/addons/bootstrap.sh`
+- [x] 3.3 `cluster/addons/helm-values/cert-manager.yaml`
+- [x] 3.4 `cluster/addons/helm-values/knative-serving.yaml`
+- [x] 3.5 `cluster/addons/helm-values/kourier.yaml`
+- [x] 3.6 `cluster/addons/helm-values/kserve.yaml`
+- [x] 3.7 `cluster/addons/helm-values/kube-prometheus-stack.yaml`
+- [x] 3.8 `cluster/addons/helm-values/opencost.yaml`
+- [x] 3.9 `cluster/addons/helm-values/aws-load-balancer-controller.yaml`
+- [x] 3.10 Version-pinned headers on every helm values file
+- [x] 3.11 `cluster/addons/verify.sh`
 
 ## 4. Local cluster (nfcu-session-4-local-cluster)
 

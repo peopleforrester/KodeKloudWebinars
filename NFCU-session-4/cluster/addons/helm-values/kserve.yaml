@@ -1,0 +1,28 @@
+# ABOUTME: Helm values for the KServe controller — pins Knative deployment mode, which is
+# ABOUTME: what makes scale-to-zero, concurrency autoscaling, and canaryTrafficPercent work.
+#
+# chart:      kserve-resources   (CRDs ship separately as the kserve-crd chart)
+# chartVersion: v0.16.0
+# appVersion: v0.16.0
+# repo:       oci://ghcr.io/kserve/charts
+# why this version: KServe 0.17 is available, but this collateral is authored and
+#                   rehearsed against 0.16.x. UPGRADE PATH TO 0.17: bump chartVersion to
+#                   v0.17.x here and in kserve-crd, re-run bootstrap.sh, and re-validate the
+#                   InferenceService manifests (the v1beta1 schema is stable across 0.16→0.17,
+#                   but confirm the storage-initializer image tag and Knative 1.16/1.17 pairing).
+#                   Track it as a separate change (upgrade-kserve-to-0-17), not a mid-flight edit.
+
+kserve:
+  controller:
+    # The session teaches scale-to-zero, concurrency autoscaling, and canary traffic
+    # splitting — all three require Knative mode. "Standard" mode loses all three.
+    deploymentMode: "Knative"
+
+    # Keep the controller small for a demo cluster.
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi

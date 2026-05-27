@@ -1,0 +1,20 @@
+# ABOUTME: Selects Kourier as the Knative ingress and configures its Service per environment.
+# ABOUTME: Kourier is the simplest Knative network layer (no service mesh) for the lab.
+#
+# component:  net-kourier (Knative ingress)
+# version:    knative-v1.15.0   (release YAML, applied via kubectl — not a Helm chart)
+# appVersion: knative-v1.15.0
+# repo:       https://github.com/knative/net-kourier  (releases/download/knative-v1.15.0/)
+# why this version: matches Knative Serving 1.15.x (KServe 0.16.0 compatible set).
+#
+# On EKS, the kourier Service is type LoadBalancer and the AWS Load Balancer Controller
+# fronts it with an NLB. Locally (kind), bootstrap.sh patches it to NodePort 31080 so the
+# kind port mapping reaches it. This file patches config-network to select Kourier.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-network
+  namespace: knative-serving
+data:
+  ingress-class: "kourier.ingress.networking.knative.dev"
