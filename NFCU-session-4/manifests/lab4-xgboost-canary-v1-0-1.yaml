@@ -1,0 +1,29 @@
+# Lab 4 (step 1 of 3) — Canary roll a new model version. Same InferenceService name as
+# Lab 1, storageUri bumped to v1.0.1, and canaryTrafficPercent: 10 so only ~10% of traffic
+# hits the new revision while ~90% stays on the known-good v1.0.0.
+#
+# Set storageUri the same way as Lab 1 (S3 on EKS, PVC locally) — only the version changes.
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: adult-income-classifier
+  labels:
+    nfcu-session-4/lab: "4"
+spec:
+  predictor:
+    minReplicas: 0
+    maxReplicas: 5
+    containerConcurrency: 50
+    canaryTrafficPercent: 10   # 10% to the new revision (v1.0.1), 90% to the last good one
+    serviceAccountName: kserve-sa
+    model:
+      modelFormat:
+        name: xgboost
+      storageUri: "s3://REPLACE_WITH_BUCKET/model-v1.0.1"
+      resources:
+        requests:
+          cpu: "250m"
+          memory: 512Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi

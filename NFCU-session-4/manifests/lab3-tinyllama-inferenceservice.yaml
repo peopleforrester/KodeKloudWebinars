@@ -1,0 +1,40 @@
+# Lab 3 — A small LLM (TinyLlama 1.1B) on CPU via a custom KServe predictor.
+# Used for the per-model cost-attribution exercise with OpenCost. No GPU requested.
+#
+# The image is the one built in predictors/tinyllama/ (multi-arch, CPU). Override the
+# registry/tag to match where you pushed it. The distilGPT-2 fallback image is a drop-in
+# replacement if Hugging Face rate-limits TinyLlama on the day.
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: tinyllama-completion
+  labels:
+    nfcu-session-4/lab: "3"
+spec:
+  predictor:
+    minReplicas: 0
+    maxReplicas: 3
+    containerConcurrency: 5   # LLM inference is heavy; cap in-flight requests per pod
+    containers:
+      - name: kserve-container
+        image: public.ecr.aws/kodekloud-workshop/tinyllama-kserve:0.16.0
+        ports:
+          - containerPort: 8080
+            protocol: TCP
+        env:
+          - name: MODEL_NAME
+            value: tinyllama-completion
+        resources:
+          requests:
+            cpu: "1"
+            memory: 4Gi       # TinyLlama 1.1B fits in ~4-6Gi on CPU
+          limits:
+            cpu: "2"
+            memory: 6Gi
+        readinessProbe:
+          httpGet:
+            path: /v1/models/tinyllama-completion
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 12   # allow time for weights to load

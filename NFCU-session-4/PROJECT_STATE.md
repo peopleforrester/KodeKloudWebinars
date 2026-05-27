@@ -35,7 +35,7 @@ Recovery tags (in the shared repo's object store): `nfcu-s4-phase0-scaffold`, `n
 - [x] Phase 3 — Cluster add-ons bootstrap (cluster/addons) — bootstrap.sh, verify.sh, 7 version-pinned helm-values
 - [x] Phase 4 — Local kind cluster (cluster/local)
 - [x] Phase 5 — Lab overlays (cluster/lab-overlays)
-- [ ] Phase 6 — InferenceService manifests (manifests/)
+- [x] Phase 6 — InferenceService manifests (manifests/)
 - [ ] Phase 7 — TinyLlama predictor image (predictors/tinyllama)
 - [ ] Phase 8 — Load test harness (tests/)
 - [ ] Phase 9 — Attendee collateral (attendee-guide, reference-card)
@@ -45,14 +45,16 @@ Recovery tags (in the shared repo's object store): `nfcu-s4-phase0-scaffold`, `n
 
 ## Last completed step
 
-Phase 4 complete. Local kind path: kind-config.yaml (1 cp + 2 workers, ports 80/443/31080),
-idempotent up.sh (create + bootstrap local + verify), down.sh, README with 16 GB min spec.
+Phase 6 complete (and Phase 5). Lab manifests (lab1 XGBoost ISVC, lab2 HPA baseline,
+lab3 TinyLlama ISVC, lab4 canary/promote/rollback), GPU vLLM reference (.disabled),
+deterministic generate-xgboost-models.py, upload-to-s3.sh, READMEs. Added
+scripts/check-manifests.py (offline structural validation) to the harness. validate clean.
 
 ## Next step
 
-Phase 5 — `cluster/lab-overlays/`: kustomize base (namespace, resourcequota 4cpu/8Gi/10pods,
-deny-cross-namespace networkpolicy, serviceaccount with IRSA annotation placeholder) +
-attendee-sample overlay + README. Validate with `kubectl kustomize build`.
+Phase 7 — `predictors/tinyllama/`: Dockerfile (multi-arch CPU, Py3.12), pyproject.toml
+(pinned deps), server.py (KServe Model subclass, prompt→completion), health.py, distilgpt2
+fallback Dockerfile, build.sh, push-to-ecr.sh, test-local.sh, .dockerignore, README.
 
 ## Notes / decisions
 

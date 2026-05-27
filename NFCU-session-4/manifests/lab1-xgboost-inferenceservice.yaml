@@ -1,0 +1,34 @@
+# Lab 1 — Deploy an XGBoost model as a KServe InferenceService (Knative mode).
+# Demonstrates: scale-to-zero (minReplicas 0) and concurrency-based autoscaling.
+#
+# STORAGE OPTIONS — set storageUri to match your cluster:
+#   EKS (S3 + IRSA):  s3://<bucket>/model-v1.0.0
+#                     where <bucket> = terraform output -raw model_artifacts_bucket_name
+#                     (the kserve-sa ServiceAccount carries the IRSA role that reads it)
+#   Local (kind):     pvc://model-store/model-v1.0.0
+#                     (load the model onto a PVC named model-store first)
+# The value below is a placeholder — substitute before applying. See
+# attendee-guide/lab-1-deploy-inferenceservice.md.
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: adult-income-classifier
+  labels:
+    nfcu-session-4/lab: "1"
+spec:
+  predictor:
+    minReplicas: 0          # scale to zero when idle — costs nothing
+    maxReplicas: 5
+    containerConcurrency: 50 # scale on in-flight requests, not CPU
+    serviceAccountName: kserve-sa
+    model:
+      modelFormat:
+        name: xgboost
+      storageUri: "s3://REPLACE_WITH_BUCKET/model-v1.0.0"
+      resources:
+        requests:
+          cpu: "250m"
+          memory: 512Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi

@@ -57,18 +57,18 @@ Checkboxes are updated live as the run progresses. See `../../../RUN_CONFIG.md` 
 
 ## 6. Inference service manifests (nfcu-session-4-inferenceservice-manifests)
 
-- [ ] 6.1 `manifests/README.md`
-- [ ] 6.2 `manifests/lab1-xgboost-inferenceservice.yaml`
-- [ ] 6.3 `manifests/lab2-hpa-baseline-deployment.yaml`
-- [ ] 6.4 `manifests/lab3-tinyllama-inferenceservice.yaml`
-- [ ] 6.5 `manifests/lab4-xgboost-canary-v1-0-1.yaml`
-- [ ] 6.6 `manifests/lab4-xgboost-promote.yaml`
-- [ ] 6.7 `manifests/lab4-xgboost-rollback.yaml`
-- [ ] 6.8 `manifests/_reference-gpu-vllm.yaml.disabled`
-- [ ] 6.9 `manifests/model-artifacts/README.md`
-- [ ] 6.10 `manifests/model-artifacts/generate-xgboost-models.py`
-- [ ] 6.11 `manifests/model-artifacts/upload-to-s3.sh`
-- [ ] 6.12 Active manifests pass `kubectl apply --dry-run=client`
+- [x] 6.1 `manifests/README.md`
+- [x] 6.2 `manifests/lab1-xgboost-inferenceservice.yaml`
+- [x] 6.3 `manifests/lab2-hpa-baseline-deployment.yaml`
+- [x] 6.4 `manifests/lab3-tinyllama-inferenceservice.yaml`
+- [x] 6.5 `manifests/lab4-xgboost-canary-v1-0-1.yaml`
+- [x] 6.6 `manifests/lab4-xgboost-promote.yaml`
+- [x] 6.7 `manifests/lab4-xgboost-rollback.yaml`
+- [x] 6.8 `manifests/_reference-gpu-vllm.yaml.disabled`
+- [x] 6.9 `manifests/model-artifacts/README.md`
+- [x] 6.10 `manifests/model-artifacts/generate-xgboost-models.py`
+- [x] 6.11 `manifests/model-artifacts/upload-to-s3.sh`
+- [x] 6.12 Active manifests pass `kubectl apply --dry-run=client`
 
 ## 7. TinyLlama predictor container (nfcu-session-4-tinyllama-predictor-image)
 

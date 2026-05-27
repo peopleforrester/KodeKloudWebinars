@@ -86,6 +86,14 @@ else
   skip "kustomize/kubectl"
 fi
 
+# --- Manifests (structural; offline substitute for kubectl dry-run) ---------
+section "manifest structure"
+if have python3 && [[ -d manifests ]]; then
+  if python3 scripts/check-manifests.py; then :; else fail "manifest structure"; fi
+else
+  echo "   (no manifests dir or python3)"
+fi
+
 # --- Shell scripts ----------------------------------------------------------
 section "bash -n (syntax)"
 while IFS= read -r f; do
