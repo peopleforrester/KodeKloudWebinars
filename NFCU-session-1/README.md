@@ -16,6 +16,7 @@ not filed away.
 | [session-outline.md](session-outline.md) | The slide-by-slide presenter outline for the live demo | Anyone watching or re-running the session |
 | [LAB_GUIDE.md](LAB_GUIDE.md) | Four-segment hands-on walkthrough to replicate the demo at home | Attendees running it themselves |
 | [FAQ.md](FAQ.md) | Nine anticipated questions with concise answers | Anyone evaluating the approach |
+| [ENVIRONMENTS.md](ENVIRONMENTS.md) | The dev → staging → production promotion flow, triggers, and gates | Anyone running or testing the pipeline |
 | [resources.md](resources.md) | Annotated reading list (regulatory + supply-chain + AI-BOM) | Anyone going deeper |
 | [requirements.txt](requirements.txt) | Pinned Python dependencies for the scripts | Anyone running the code |
 | [pipeline/](pipeline/) | Validation, container build/scan/sign, and audit-trail tooling | Engineers studying the pipeline |
