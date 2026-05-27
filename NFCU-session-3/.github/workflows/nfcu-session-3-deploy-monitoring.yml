@@ -1,0 +1,94 @@
+# ABOUTME: Per-attendee provisioning workflow for NFCU Session 3 monitoring.
+# ABOUTME: Nested under NFCU-session-3/ for self-containment; copy to repo-root
+# ABOUTME: .github/workflows/ to have GitHub Actions execute it as live CI.
+name: nfcu-session-3-deploy-monitoring
+
+on:
+  workflow_dispatch:
+    inputs:
+      attendee_id:
+        description: "Attendee sandbox id (e.g. lab-007)"
+        required: true
+        type: string
+      region:
+        description: "AWS region"
+        required: false
+        default: "us-east-1"
+        type: string
+  repository_dispatch:
+    types: [provision-attendee]
+
+permissions:
+  contents: read
+  id-token: write  # for OIDC role assumption into the lab sandbox
+
+concurrency:
+  group: nfcu-s3-${{ github.event.inputs.attendee_id || github.event.client_payload.attendee_id }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: NFCU-session-3
+
+jobs:
+  provision:
+    name: Provision attendee monitoring
+    runs-on: ubuntu-latest
+    env:
+      ATTENDEE_ID: ${{ github.event.inputs.attendee_id || github.event.client_payload.attendee_id }}
+      AWS_REGION: ${{ github.event.inputs.region || 'us-east-1' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.LAB_PROVISIONER_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.6"
+
+      - name: Provision per-attendee infra (buckets, IAM, Lambdas, schedule)
+        working-directory: NFCU-session-3/infra
+        run: |
+          terraform init -input=false
+          terraform workspace select "$ATTENDEE_ID" || terraform workspace new "$ATTENDEE_ID"
+          terraform apply -input=false -auto-approve \
+            -var="attendee_id=$ATTENDEE_ID" \
+            -var="region=$AWS_REGION"
+
+      - name: Provision monitoring (alarms + SNS)
+        working-directory: NFCU-session-3/monitoring
+        run: |
+          terraform init -input=false
+          terraform workspace select "$ATTENDEE_ID" || terraform workspace new "$ATTENDEE_ID"
+          terraform apply -input=false -auto-approve \
+            -var="attendee_id=$ATTENDEE_ID"
+
+      - name: Put CloudWatch dashboard
+        working-directory: NFCU-session-3/monitoring
+        run: |
+          sed "s/{attendee_id}/$ATTENDEE_ID/g" dashboard.json > dashboard.rendered.json
+          aws cloudwatch put-dashboard \
+            --dashboard-name "workshop-lab-${ATTENDEE_ID}" \
+            --dashboard-body "file://dashboard.rendered.json"
+
+      - name: Upload reference distribution to baseline bucket
+        run: |
+          if [ -f reference.parquet ]; then
+            aws s3 cp reference.parquet "s3://workshop-lab-${ATTENDEE_ID}-baseline/reference.parquet"
+          else
+            echo "::warning::reference.parquet not present in checkout; capture it at build time and commit or stage it"
+          fi
+
+      - name: Verify three alarms exist
+        run: |
+          count=$(aws cloudwatch describe-alarms \
+            --alarm-name-prefix "workshop-lab-${ATTENDEE_ID}" \
+            --query 'length(MetricAlarms)' --output text)
+          echo "alarm count: $count"
+          test "$count" -eq 3
