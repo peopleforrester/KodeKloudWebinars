@@ -1,0 +1,31 @@
+# Build artifacts and local state — never commit these.
+
+# Model artifacts (generated deterministically; see manifests/model-artifacts/)
+*.tar.gz
+model-artifacts/*.bst
+model-artifacts/model-v*/
+
+# Cluster credentials
+kubeconfig
+*.kubeconfig
+
+# Environment files
+.env
+.env.*
+
+# Terraform state and local config
+terraform.tfstate
+terraform.tfstate.*
+.terraform/
+.terraform.lock.hcl
+*.tfvars
+
+# ...but keep the annotated examples
+!*.tfvars.example
+
+# k6 result dumps
+*.k6-summary.json
+
+# OS / editor cruft
+.DS_Store
+*.swp

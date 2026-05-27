@@ -1,0 +1,18 @@
+# yamllint config for Session 4 collateral. Relaxed for Kubernetes/Helm manifests:
+# long image refs and storageUris are common, and Helm values intentionally omit
+# document-start markers.
+extends: default
+
+rules:
+  line-length:
+    max: 160
+    level: warning
+  document-start: disable
+  comments:
+    min-spaces-from-content: 1
+  truthy:
+    allowed-values: ["true", "false", "on", "off"]
+    check-keys: false
+  indentation:
+    spaces: 2
+    indent-sequences: true
